@@ -3,17 +3,17 @@ import { Candle, Balance } from "./types/@api";
 
 let MARKET = "KRW-BTC";
 let CRYPTO_SYMBOL = "BTC";
+let K = 0.5;
 
 async function buyCryto() {
     let candle: Candle[] = await getLastCandle(60, MARKET, 2);
-    let lastCandle = candle[0];
-    let currentPrice = lastCandle.trade_price;
+    let currentCandle = candle[0];
+    let currentPrice = currentCandle.trade_price;
 
-    let beforeCandle = candle[1];
-    let lastPrice = beforeCandle.trade_price;
-    let high = beforeCandle.high_price;
-    let low = beforeCandle.low_price;
-    let k = 0.5;
+    let lastCandle = candle[1];
+    let lastPrice = lastCandle.trade_price;
+    let high = lastCandle.high_price;
+    let low = lastCandle.low_price;
     
     let myAccount: Balance[] = await getMyAccount();
     let myBalance: number = 0;
@@ -25,7 +25,7 @@ async function buyCryto() {
         }
     });
 
-    if (lastPrice + (high - low) * k < currentPrice) {
+    if (lastPrice + (high - low) * K <= currentPrice) {
         if (myBalance > 5000) {
             buy(MARKET, myBalance);
         }
@@ -38,9 +38,8 @@ async function sellCryto() {
     let myAvgBuyPrice: number = 0;
 
     let candle: Candle[] = await getLastCandle(60, MARKET, 2);
-    let lastCandle = candle[0];
-    let currentPrice = lastCandle.trade_price;
-
+    let currentCandle = candle[0];
+    let currentPrice = currentCandle.trade_price;
 
     myAccount.forEach((balance: any) => {
         let currency = balance.currency;
@@ -62,13 +61,11 @@ async function sellCryto() {
 async function sellAll() {
     let myAccount: Balance[] = await getMyAccount();
     let myBalance: number = 0;
-    let myAvgBuyPrice: number = 0;
 
     myAccount.forEach((balance: any) => {
         let currency = balance.currency;
         if (currency === CRYPTO_SYMBOL) {
             myBalance = balance.balance;
-            myAvgBuyPrice = balance.avg_buy_price;
         }
     });
 

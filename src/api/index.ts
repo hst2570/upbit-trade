@@ -1,6 +1,7 @@
 import { AxiosResponse } from "axios";
 import { encode } from "querystring";
 import { requestAuthWtihParams, requestAuth, request } from "./api";
+import { sendTelegram } from "../notification";
 
 export const getLastCandle = (unit: number, market: string, count: number) => {
   let query: any = {};
@@ -40,40 +41,42 @@ export const getMyAccount = () => {
 
 export const buy = (market: string, price: number) => {
   let url = `https://api.upbit.com/v1/orders`;
-  return requestAuthWtihParams(
-    url, 
-    "POST", 
-    {
-      market: market,
-      side: "bid",
-      price: price,
-      ord_type: "price",
-    })
-    .then((res: AxiosResponse) => {
-      let data = res.data;
-      return data;
-    })
-    .catch((e) => {
-      console.log(e);
-    })
+  sendTelegram(`[BUY]\n${market}\nKRW: ${price}`);
+  // return requestAuthWtihParams(
+  //   url, 
+  //   "POST", 
+  //   {
+  //     market: market,
+  //     side: "bid",
+  //     price: price,
+  //     ord_type: "price",
+  //   })
+  //   .then((res: AxiosResponse) => {
+  //     let data = res.data;
+  //     return data;
+  //   })
+  //   .catch((e) => {
+  //     console.log(e);
+  //   })
 }
 
 export const sell = (market: string, volume: number) => {
   let url = `https://api.upbit.com/v1/orders`;
-  return requestAuthWtihParams(
-    url, 
-    "POST", 
-    {
-      market: market,
-      side: "ask",
-      volume: volume,
-      ord_type: "market",
-    })
-    .then((res: AxiosResponse) => {
-      let data = res.data;
-      return data;
-    })
-    .catch((e) => {
-      console.log(e);
-    })
+  sendTelegram(`[SELL]\n ${market}\nvolume: ${volume}`);
+  // return requestAuthWtihParams(
+  //   url, 
+  //   "POST", 
+  //   {
+  //     market: market,
+  //     side: "ask",
+  //     volume: volume,
+  //     ord_type: "market",
+  //   })
+  //   .then((res: AxiosResponse) => {
+  //     let data = res.data;
+  //     return data;
+  //   })
+  //   .catch((e) => {
+  //     console.log(e);
+  //   })
 }
