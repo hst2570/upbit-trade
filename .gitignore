@@ -2,3 +2,4 @@ env/index.ts
 env/index.js
 node_modules/*
 .vscode/*
+dist/*
