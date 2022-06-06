@@ -26,6 +26,29 @@ export const getLastCandle = (unit: number, market: string, count: number) => {
     });
 }
 
+export const getLastDayCandle = (market: string, count: number) => {
+  let query: any = {};
+
+  if (market) {
+    query['market'] = market;
+  }
+
+  if (count) {
+    query['count'] = count;
+  }
+
+  return request(
+      `https://api.upbit.com/v1/candles/days?${encode(query)}`,
+      'GET'
+    )
+    .then((res: AxiosResponse) => {
+      return res.data;
+    })
+    .catch((e) => {
+      console.log(e.message);
+    });
+}
+
 export const getMyAccount = () => {
   let url = `https://api.upbit.com/v1/accounts`;
 

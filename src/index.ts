@@ -1,13 +1,13 @@
-import { getLastCandle, getMyAccount, buy, sell } from './api';
+import { getLastDayCandle, getMyAccount, buy, sell } from './api';
 import { Candle, Balance } from "./types/@api";
 
 let MARKET = "KRW-BTC";
 let CRYPTO_SYMBOL = "BTC";
 let K = 0.5;
-let saveMoney = 6000000;
+let saveMoney = 5000000;
 
 export async function buyCryto() {
-    let candle: Candle[] = await getLastCandle(60, MARKET, 2);
+    let candle: Candle[] = await getLastDayCandle(MARKET, 2);
     let currentCandle = candle[0];
     let currentPrice = currentCandle.trade_price;
 
@@ -19,9 +19,8 @@ export async function buyCryto() {
     let myAccount: Balance[] = await getMyAccount();
     let myBalance: number = 0;
 
-    myAccount.forEach((balance: any) => {
-        let currency = balance.currency;
-        if (currency === 'KRW') {
+    myAccount.forEach((balance: Balance) => {
+        if (balance.currency === 'KRW') {
             myBalance = balance.balance;
         }
     });
@@ -40,13 +39,12 @@ export async function sellCryto() {
     let myBalance: number = 0;
     let myAvgBuyPrice: number = 0;
 
-    let candle: Candle[] = await getLastCandle(60, MARKET, 2);
+    let candle: Candle[] = await getLastDayCandle(MARKET, 2);
     let currentCandle = candle[0];
     let currentPrice = currentCandle.trade_price;
 
-    myAccount.forEach((balance: any) => {
-        let currency = balance.currency;
-        if (currency === CRYPTO_SYMBOL) {
+    myAccount.forEach((balance: Balance) => {
+        if (balance.currency === CRYPTO_SYMBOL) {
             myBalance = balance.balance;
             myAvgBuyPrice = balance.avg_buy_price;
         }
@@ -65,9 +63,8 @@ export async function sellAll() {
     let myAccount: Balance[] = await getMyAccount();
     let myBalance: number = 0;
 
-    myAccount.forEach((balance: any) => {
-        let currency = balance.currency;
-        if (currency === CRYPTO_SYMBOL) {
+    myAccount.forEach((balance: Balance) => {
+        if (balance.currency === CRYPTO_SYMBOL) {
             myBalance = balance.balance;
         }
     });
