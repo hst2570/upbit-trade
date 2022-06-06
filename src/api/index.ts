@@ -22,7 +22,7 @@ export const getLastCandle = (unit: number, market: string, count: number) => {
       return res.data;
     })
     .catch((e) => {
-      console.log(e);
+      console.log(e.message);
     });
 }
 
@@ -35,48 +35,50 @@ export const getMyAccount = () => {
       return data;
     })
     .catch((e) => {
-      console.log(e);
+      console.log(e.message);
     });
 }
 
 export const buy = (market: string, price: number) => {
   let url = `https://api.upbit.com/v1/orders`;
-  sendTelegram(`[BUY]\n${market}\nKRW: ${price}`);
-  // return requestAuthWtihParams(
-  //   url, 
-  //   "POST", 
-  //   {
-  //     market: market,
-  //     side: "bid",
-  //     price: price,
-  //     ord_type: "price",
-  //   })
-  //   .then((res: AxiosResponse) => {
-  //     let data = res.data;
-  //     return data;
-  //   })
-  //   .catch((e) => {
-  //     console.log(e);
-  //   })
+
+  return requestAuthWtihParams(
+    url, 
+    "POST", 
+    {
+      market: market,
+      side: "bid",
+      price: price,
+      ord_type: "price",
+    })
+    .then((res: AxiosResponse) => {
+      sendTelegram(`[BUY]\n${market}\nKRW: ${price}`);
+      let data = res.data;
+      return data;
+    })
+    .catch((e) => {
+      console.log(e.message);
+    })
 }
 
 export const sell = (market: string, volume: number) => {
   let url = `https://api.upbit.com/v1/orders`;
-  sendTelegram(`[SELL]\n ${market}\nvolume: ${volume}`);
-  // return requestAuthWtihParams(
-  //   url, 
-  //   "POST", 
-  //   {
-  //     market: market,
-  //     side: "ask",
-  //     volume: volume,
-  //     ord_type: "market",
-  //   })
-  //   .then((res: AxiosResponse) => {
-  //     let data = res.data;
-  //     return data;
-  //   })
-  //   .catch((e) => {
-  //     console.log(e);
-  //   })
+  
+  return requestAuthWtihParams(
+    url, 
+    "POST", 
+    {
+      market: market,
+      side: "ask",
+      volume: volume,
+      ord_type: "market",
+    })
+    .then((res: AxiosResponse) => {
+      sendTelegram(`[SELL]\n ${market}\nvolume: ${volume}`);
+      let data = res.data;
+      return data;
+    })
+    .catch((e) => {
+      console.log(e.message);
+    })
 }

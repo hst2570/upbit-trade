@@ -4,8 +4,9 @@ import { Candle, Balance } from "./types/@api";
 let MARKET = "KRW-BTC";
 let CRYPTO_SYMBOL = "BTC";
 let K = 0.5;
+let saveMoney = 6000000;
 
-async function buyCryto() {
+export async function buyCryto() {
     let candle: Candle[] = await getLastCandle(60, MARKET, 2);
     let currentCandle = candle[0];
     let currentPrice = currentCandle.trade_price;
@@ -25,6 +26,8 @@ async function buyCryto() {
         }
     });
 
+    myBalance = myBalance - saveMoney;
+
     if (lastPrice + (high - low) * K <= currentPrice) {
         if (myBalance > 5000) {
             buy(MARKET, myBalance);
@@ -32,7 +35,7 @@ async function buyCryto() {
     }
 }
 
-async function sellCryto() {
+export async function sellCryto() {
     let myAccount: Balance[] = await getMyAccount();
     let myBalance: number = 0;
     let myAvgBuyPrice: number = 0;
@@ -58,7 +61,7 @@ async function sellCryto() {
     }
 }
 
-async function sellAll() {
+export async function sellAll() {
     let myAccount: Balance[] = await getMyAccount();
     let myBalance: number = 0;
 
