@@ -1,11 +1,20 @@
 import { request } from "../api/api";
 import ENV from "../../env";
 
-var CHAT_TOKEN = ENV.TELEGRAM_CHAT_TOKEN;
-var BOT_TOKEN = ENV.TELEGRAM_BOT_TOKEN;
+var TELEGRAM_CHAT_TOKEN = ENV.TELEGRAM_CHAT_TOKEN;
+var TELEGRAM_BOT_TOKEN = ENV.TELEGRAM_BOT_TOKEN;
 
-export const sendTelegram = (message: string) => {
-    let url = `https://api.telegram.org/bot${BOT_TOKEN}/sendmessage?chat_id=${CHAT_TOKEN}&text=${message}`;
+const sendTelegram = (message: string) => {
+    if (!TELEGRAM_CHAT_TOKEN || !TELEGRAM_BOT_TOKEN) {
+        return;
+    }
 
-    request(url, 'GET')
+    request(
+        `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendmessage?chat_id=${TELEGRAM_CHAT_TOKEN}&text=${message}`,
+        'GET'
+        );
 };
+
+export const sendNotification = (message: string) => {
+    sendTelegram(message);
+}

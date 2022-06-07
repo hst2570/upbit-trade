@@ -1,7 +1,8 @@
 export type Candle = {
+    opening_price: number;
     trade_price: number;
     high_price: number;
-    low_price: number
+    low_price: number;
 }
 
 export type Balance = {

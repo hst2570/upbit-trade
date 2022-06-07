@@ -1,7 +1,7 @@
 import { AxiosResponse } from "axios";
 import { encode } from "querystring";
 import { requestAuthWtihParams, requestAuth, request } from "./api";
-import { sendTelegram } from "../notification";
+import { sendNotification } from "../notification";
 
 export const getLastCandle = (unit: number, market: string, count: number) => {
   let query: any = {};
@@ -75,7 +75,7 @@ export const buy = (market: string, price: number) => {
       ord_type: "price",
     })
     .then((res: AxiosResponse) => {
-      sendTelegram(`[BUY]\n${market}\nKRW: ${price}`);
+      sendNotification(`[BUY]\n${market}\nKRW: ${price}`);
       let data = res.data;
       return data;
     })
@@ -97,7 +97,7 @@ export const sell = (market: string, volume: number) => {
       ord_type: "market",
     })
     .then((res: AxiosResponse) => {
-      sendTelegram(`[SELL]\n ${market}\nvolume: ${volume}`);
+      sendNotification(`[SELL]\n ${market}\nvolume: ${volume}`);
       let data = res.data;
       return data;
     })
