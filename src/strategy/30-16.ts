@@ -40,8 +40,10 @@ async function sellAll() {
     }
   })
 
-  if (await isSellCondition(avgBuyPrice)) {
-    sell(MARKET, totalBalance)
+  if (totalBalance >= 0.0005) {
+    if (await isSellCondition(avgBuyPrice)) {
+      sell(MARKET, totalBalance)
+    }
   }
 }
 
