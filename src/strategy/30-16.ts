@@ -8,7 +8,7 @@ const CRYPTO_SYMBOL = ENV.CRYPTO_SYMBOL
 const HIGH_TRIGGER_RATE = 1.3
 const LOW_TRIGGER_RATE = 0.84
 
-export const volatilityBreakthrough: Strategy = {
+export default {
   buy: buyCryto,
   sell: sellAll,
 }
