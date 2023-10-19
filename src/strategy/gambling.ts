@@ -1,12 +1,11 @@
 import { getLastDayCandle, getMyAccount, buy, sell } from '../api'
 import { Candle, Balance } from '../types/@api'
-import { Strategy } from '../types/@strategy'
 import ENV from '../../env'
 
 const MARKET = ENV.MARKET
 const CRYPTO_SYMBOL = ENV.CRYPTO_SYMBOL
-const HIGH_TRIGGER_RATE = 1.3
-const LOW_TRIGGER_RATE = 0.84
+const HIGH_TRIGGER_RATE = ENV.HIGH_TRIGGER_RATE
+const LOW_TRIGGER_RATE = ENV.LOW_TRIGGER_RATE
 
 export default {
   buy: buyCryto,

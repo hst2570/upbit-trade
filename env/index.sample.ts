@@ -6,4 +6,6 @@ export default {
   MARKET: 'KRW-BTC',
   K: 0.5,
   CRYPTO_SYMBOL: 'BTC',
+  HIGH_TRIGGER_RATE: 1.14,
+  LOW_TRIGGER_RATE: 0.98,
 }
