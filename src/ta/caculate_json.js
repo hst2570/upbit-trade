@@ -1,6 +1,6 @@
 const fs = require('fs')
 const csv = require('csv-parser')
-const candles = require('./1y.json')
+const candles = require('./btc_20221018_1y.json')
 
 const winInfo = {
   winRate: 1,
@@ -17,25 +17,28 @@ let balance = initBalance
 
 let maxBalance = 0
 console.log('candles, ', candles.length)
-// for (let i = 1.01; i < 2; i = i + 0.01) {
-//   for (let j = 1; j > 0; j = j - 0.01) {
-//     // try {
-//     //   calculateWinProbability(i, j)
-//     // } catch {}
-//     for (
-//       let investmentRatio = 0.1;
-//       investmentRatio <= 1;
-//       investmentRatio = investmentRatio + 0.1
-//     ) {
-//       // for (let leverage = 1; leverage <= 25; leverage = leverage + 1) {
-//       try {
-//         calculateWinProbability(i, j, investmentRatio)
-//       } catch {}
-//       // }
-//     }
-//   }
-// }
-calculateWinProbability(1.31, 0.83)
+for (let i = 1.01; i < 2; i = i + 0.01) {
+  for (let j = 1; j > 0; j = j - 0.01) {
+    /**
+    try {
+      calculateWinProbability(i, j)
+    } catch {}
+    /*/
+    for (
+      let investmentRatio = 0.1;
+      investmentRatio <= 1;
+      investmentRatio = investmentRatio + 0.1
+    ) {
+      // for (let leverage = 1; leverage <= 25; leverage = leverage + 1) {
+      try {
+        calculateWinProbability(i, j, investmentRatio)
+      } catch {}
+      // }
+    }
+    /* */
+  }
+}
+
 const sortedList = winList.sort((a, b) => a.balance - b.balance).reverse()
 
 sortedList.slice(0, 100).forEach(item => {

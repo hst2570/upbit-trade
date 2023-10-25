@@ -16,14 +16,17 @@ async function buyCryto() {
   let myAccount: Balance[] = await getMyAccount()
   let myBalance: number = 0
 
-  myAccount.forEach((balance: Balance) => {
-    if (balance.currency === 'KRW') {
-      myBalance = balance.balance
+  myAccount.forEach(({ balance, currency }: Balance) => {
+    if (currency === 'KRW') {
+      const balanceKRW = Number(balance).toFixed(0)
+      myBalance = Number(balanceKRW)
     }
   })
 
-  if (myBalance > 10000) {
-    buy(MARKET, myBalance)
+  const fee = myBalance * 0.0005
+
+  if (myBalance > 10050) {
+    buy(MARKET, myBalance - fee)
   }
 }
 
