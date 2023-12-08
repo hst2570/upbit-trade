@@ -13,7 +13,7 @@ export default {
 }
 
 async function buyCryto() {
-  let myAccount: Balance[] = await getMyAccount()
+  const myAccount: Balance[] = await getMyAccount()
   let myBalance: number = 0
 
   myAccount.forEach(({ balance, currency }: Balance) => {
@@ -31,7 +31,7 @@ async function buyCryto() {
 }
 
 async function sellAll() {
-  let myAccount: Balance[] = await getMyAccount()
+  const myAccount: Balance[] = await getMyAccount()
   let totalBalance: number = 0
   let avgBuyPrice: number = 0
 
@@ -42,24 +42,30 @@ async function sellAll() {
     }
   })
 
+  const high =
+    Number(((avgBuyPrice * HIGH_TRIGGER_RATE) / 1000).toFixed(0)) * 1000
+  const row =
+    Number(((avgBuyPrice * LOW_TRIGGER_RATE) / 1000).toFixed(0)) * 1000
+  const lowCondition = Number((row * 1.001).toFixed(0))
+
   if (totalBalance >= 0.0005) {
-    if (await isSellCondition(avgBuyPrice)) {
-      sell(MARKET, totalBalance)
+    const candle: Candle[] = await getLastDayCandle(MARKET, 2)
+    const currentCandle = candle[0]
+    const currentPrice = currentCandle.trade_price
+
+    if (high <= currentPrice) {
+      sell({
+        market: MARKET,
+        volume: totalBalance,
+        orderType: 'market',
+      })
+    } else if (lowCondition >= currentPrice) {
+      sell({
+        market: MARKET,
+        volume: totalBalance,
+        price: row,
+        orderType: 'limit',
+      })
     }
-  }
-}
-
-const isSellCondition = async (avgBuyPrice: number) => {
-  let candle: Candle[] = await getLastDayCandle(MARKET, 2)
-  let currentCandle = candle[0]
-  let currentPrice = currentCandle.trade_price
-
-  if (
-    avgBuyPrice * HIGH_TRIGGER_RATE <= currentPrice ||
-    avgBuyPrice * LOW_TRIGGER_RATE >= currentPrice
-  ) {
-    return true
-  } else {
-    return false
   }
 }

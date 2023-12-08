@@ -93,17 +93,28 @@ export const buy = (market: string, price: number) => {
     })
 }
 
-export const sell = (market: string, volume: number) => {
+export const sell = ({
+  market,
+  volume,
+  price,
+  orderType,
+}: {
+  market: string
+  volume: number
+  price?: number
+  orderType: string
+}) => {
   let url = `https://api.upbit.com/v1/orders`
 
   return requestAuthWtihParams(url, 'POST', {
-    market: market,
+    market,
+    volume,
+    price,
     side: 'ask',
-    volume: volume,
-    ord_type: 'market',
+    ord_type: orderType,
   })
     .then((res: AxiosResponse) => {
-      sendNotification(`[SELL]\n ${market}\nvolume: ${volume}`)
+      sendNotification(`[SELL]\n ${market}\nvolume: ${volume}\n${orderType}`)
       let data = res.data
       return data
     })

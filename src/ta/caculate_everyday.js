@@ -167,35 +167,20 @@ function calculateWinProbability(
     let winTargetPrice = currentPrice * winRate
     let loseTargetPrice = currentPrice * loseRate
 
-    // if (
-    //   open <= loseTargetPrice ||
-    //   close <= loseTargetPrice ||
-    //   row <= loseTargetPrice
-    // ) {
-    //   lose++
-
-    //   balance =
-    //     (1 - investmentRatio) * balance +
-    //     balance * investmentRatio -
-    //     balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
-    //   balance = balance * 0.9995
-    //   currentPrice = 0
-    // } else if (
-    //   open >= winTargetPrice ||
-    //   close >= winTargetPrice ||
-    //   high >= winTargetPrice
-    // ) {
-    //   win++
-    //   balance =
-    //     (1 - investmentRatio) * balance +
-    //     balance * investmentRatio +
-    //     balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
-
-    //   balance = balance * 0.9995
-    //   currentPrice = 0
-    // }
-
     if (
+      open <= loseTargetPrice ||
+      close <= loseTargetPrice ||
+      row <= loseTargetPrice
+    ) {
+      lose++
+
+      balance =
+        (1 - investmentRatio) * balance +
+        balance * investmentRatio -
+        balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
+      balance = balance * 0.9995
+      currentPrice = 0
+    } else if (
       open >= winTargetPrice ||
       close >= winTargetPrice ||
       high >= winTargetPrice
@@ -208,19 +193,34 @@ function calculateWinProbability(
 
       balance = balance * 0.9995
       currentPrice = 0
-    } else if (
-      open <= loseTargetPrice ||
-      close <= loseTargetPrice ||
-      row <= loseTargetPrice
-    ) {
-      lose++
-      balance =
-        (1 - investmentRatio) * balance +
-        balance * investmentRatio -
-        balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
-      balance = balance * 0.9995
-      currentPrice = 0
     }
+
+    // if (
+    //   open >= winTargetPrice ||
+    //   close >= winTargetPrice ||
+    //   high >= winTargetPrice
+    // ) {
+    //   win++
+    //   balance =
+    //     (1 - investmentRatio) * balance +
+    //     balance * investmentRatio +
+    //     balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
+
+    //   balance = balance * 0.9995 * 0.995
+    //   currentPrice = 0
+    // } else if (
+    //   open <= loseTargetPrice ||
+    //   close <= loseTargetPrice ||
+    //   row <= loseTargetPrice
+    // ) {
+    //   lose++
+    //   balance =
+    //     (1 - investmentRatio) * balance +
+    //     balance * investmentRatio -
+    //     balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
+    //   balance = balance * 0.9995 * 0.995
+    //   currentPrice = 0
+    // }
 
     if (balance < 0) {
       throw new Error()
