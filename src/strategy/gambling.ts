@@ -48,6 +48,10 @@ async function sellAll() {
     Number(((avgBuyPrice * LOW_TRIGGER_RATE) / 1000).toFixed(0)) * 1000
   const lowCondition = Number((row * 1.001).toFixed(0))
 
+  console.log('high', high)
+  console.log('row', row)
+  console.log('lowCondition', lowCondition)
+
   if (totalBalance >= 0.0005) {
     const candle: Candle[] = await getLastDayCandle(MARKET, 2)
     const currentCandle = candle[0]
