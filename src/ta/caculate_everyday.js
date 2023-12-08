@@ -4,14 +4,16 @@ const data3 = require('./data/2019_10_26.json')
 const data4 = require('./data/2020_10_26.json')
 const data5 = require('./data/2021_10_26.json')
 const data6 = require('./data/2022_10_26.json')
+const data7 = require('./data/2023_10_26.json')
 
 const candles = [
-  // ...data1.data.quotes,
+  ...data1.data.quotes,
   ...data2.data.quotes,
   ...data3.data.quotes,
   ...data4.data.quotes,
   ...data5.data.quotes,
   ...data6.data.quotes,
+  ...data7.data.quotes,
 ]
 
 /*
@@ -29,6 +31,8 @@ https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeS
 https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeStart=1603561200&timeEnd=1635097200&interval=1d&convertId=2781
 https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeStart=1635097200&timeEnd=1666633200&interval=1d&convertId=2781
 https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeStart=1666633200&timeEnd=1698169200&interval=1d&convertId=2781
+
+curl https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical\?id\=1\&timeStart\=1698169200\&interval\=1d\&convertId\=2781 > 2023_10_26.json
  */
 
 function addCommas(number) {
@@ -50,6 +54,9 @@ let balance = initBalance
 
 let maxBalance = 0
 console.log('candles, ', candles.length)
+
+// calculateWinProbability(1.131, 0.992)
+
 for (let i = 1.001; i < 2; i = i + 0.001) {
   for (let j = 0.999; j > 0; j = j - 0.001) {
     /* */
@@ -62,29 +69,69 @@ for (let i = 1.001; i < 2; i = i + 0.001) {
       investmentRatio <= 1;
       investmentRatio = investmentRatio + 0.1
     ) {
-      for (let leverage = 1; leverage <= 25; leverage = leverage + 1) {
+      // for (let leverage = 1; leverage <= 25; leverage = leverage + 1) {
         try {
-          calculateWinProbability(i, j, investmentRatio, leverage)
+          calculateWinProbability(i, j, investmentRatio)
         } catch {}
-      }
+      // }
     }
     /* */
   }
+  console.clear()
+  console.info(`${(i * 100 - 100).toFixed(1)}%`)
 }
 
 const sortedList = winList
-  .sort((a, b) => b.balance - a.balance)
-  .slice(0, 100)
-  .reverse()
+  .reduce((acc, item) => {
+    const winRateFixed = item.winRate.toFixed(1)
+    const loseRateFixed = item.loseRate.toFixed(1)
 
+    let findItem = acc?.find(
+      accItem =>
+        accItem.winRateFixed === winRateFixed &&
+        accItem.loseRateFixed === loseRateFixed
+    )
+
+    let findIndex = acc?.findIndex(
+      accItem =>
+        accItem.winRateFixed === winRateFixed &&
+        accItem.loseRateFixed === loseRateFixed
+    )
+
+    let moreBalance = findItem?.balance < item.balance
+
+    if (findItem && moreBalance) {
+      acc[findIndex] = {
+        ...item,
+        winRateFixed,
+        loseRateFixed,
+      }
+    } else if (findIndex < 0) {
+      acc.push({
+        ...item,
+        winRateFixed,
+        loseRateFixed,
+      })
+    }
+
+    return acc
+  }, [])
+  .sort((a, b) => b.balance - a.balance)
+  .slice(0, 10)
+  .reverse()
+console.clear()
 sortedList.forEach(item => {
   console.log(
-    `winRate: ${item.winRate.toFixed(2)} / loseRate: ${item.loseRate.toFixed(
-      2
+    `--- \nwinRate: ${item.winRate.toFixed(
+      3
+    )} / loseRate: ${item.loseRate.toFixed(
+      3
     )} / prob: ${item.probability.toFixed(2)} wc: ${item.winCount} / lc: ${
       item.loseCount
-    } / bal: ${item.balance.toFixed(0)}
-                / ratio: ${item.ratio.toFixed(2)} / leverage: ${item.leverage}`
+    } / bal: ${item.balance.toFixed(0)}`
+    // / ratio: ${item.ratio.toFixed(
+    //   2
+    // )} / leverage: ${item.leverage}`
   )
 })
 
@@ -94,7 +141,7 @@ console.log('winInfo: ', winInfo)
 
 function calculateWinProbability(
   winRate,
-  loseRate,
+  loseRate = 1,
   investmentRatio = 1,
   leverage = 1
 ) {
@@ -103,10 +150,10 @@ function calculateWinProbability(
   let currentPrice = 0
 
   if (winRate - loseRate > 0.5) {
-    return
+    // return
   }
 
-  candles.forEach((originCandle, index) => {
+  candles.forEach(originCandle => {
     const candle = originCandle.quote
     let open = candle.open
     let close = candle.close
@@ -120,36 +167,20 @@ function calculateWinProbability(
     let winTargetPrice = currentPrice * winRate
     let loseTargetPrice = currentPrice * loseRate
 
-    if (
-      open <= loseTargetPrice ||
-      close <= loseTargetPrice ||
-      row <= loseTargetPrice
-    ) {
-      lose++
-
-      balance =
-        (1 - investmentRatio) * balance +
-        balance * investmentRatio -
-        balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
-      balance = balance * 0.9995
-      currentPrice = 0
-    } else if (
-      open >= winTargetPrice ||
-      close >= winTargetPrice ||
-      high >= winTargetPrice
-    ) {
-      win++
-      balance =
-        (1 - investmentRatio) * balance +
-        balance * investmentRatio +
-        balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
-
-      // balance = balance * winRate
-      balance = balance * 0.9995
-      currentPrice = 0
-    }
-
     // if (
+    //   open <= loseTargetPrice ||
+    //   close <= loseTargetPrice ||
+    //   row <= loseTargetPrice
+    // ) {
+    //   lose++
+
+    //   balance =
+    //     (1 - investmentRatio) * balance +
+    //     balance * investmentRatio -
+    //     balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
+    //   balance = balance * 0.9995
+    //   currentPrice = 0
+    // } else if (
     //   open >= winTargetPrice ||
     //   close >= winTargetPrice ||
     //   high >= winTargetPrice
@@ -160,19 +191,36 @@ function calculateWinProbability(
     //     balance * investmentRatio +
     //     balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
 
-    //   currentPrice = 0
-    // } else if (
-    //   open <= loseTargetPrice ||
-    //   close <= loseTargetPrice ||
-    //   row <= loseTargetPrice
-    // ) {
-    //   lose++
-    //   balance =
-    //     (1 - investmentRatio) * balance +
-    //     balance * investmentRatio -
-    //     balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
+    //   balance = balance * 0.9995
     //   currentPrice = 0
     // }
+
+    if (
+      open >= winTargetPrice ||
+      close >= winTargetPrice ||
+      high >= winTargetPrice
+    ) {
+      win++
+      balance =
+        (1 - investmentRatio) * balance +
+        balance * investmentRatio +
+        balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
+
+      balance = balance * 0.9995
+      currentPrice = 0
+    } else if (
+      open <= loseTargetPrice ||
+      close <= loseTargetPrice ||
+      row <= loseTargetPrice
+    ) {
+      lose++
+      balance =
+        (1 - investmentRatio) * balance +
+        balance * investmentRatio -
+        balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
+      balance = balance * 0.9995
+      currentPrice = 0
+    }
 
     if (balance < 0) {
       throw new Error()
@@ -203,21 +251,6 @@ function calculateWinProbability(
     ratio: investmentRatio,
     leverage: leverage,
   })
-
-  // if (
-  //     winProbability > winInfo.probability &&
-  //     winProbability < 80 &&
-  //     winRate > 1 &&
-  //     loseRate < 1 &&
-  //     (win > 100 || lose > 100)
-  // ) {
-  //     winInfo.probability = winProbability;
-  //     winInfo.winRate = winRate;
-  //     winInfo.loseRate = loseRate;
-  //     winInfo.winCount = win;
-  //     winInfo.loseCount = lose;
-  //     winInfo.balance = balance;
-  // }
 
   balance = initBalance
 }
