@@ -61,7 +61,8 @@ async function sellAll() {
       sell({
         market: MARKET,
         volume: totalBalance,
-        orderType: 'market',
+        price: high,
+        orderType: 'limit',
       })
     } else if (lowCondition >= currentPrice) {
       sell({
