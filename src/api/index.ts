@@ -31,7 +31,13 @@ export const getLastCandle = (unit: number, market: string, count: number) => {
     })
 }
 
-export const getLastDayCandle = (market: string, count: number) => {
+export const getLastDayCandle = ({
+  market,
+  count,
+}: {
+  market: string
+  count: number
+}) => {
   let query: any = {}
 
   if (market) {

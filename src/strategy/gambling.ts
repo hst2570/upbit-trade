@@ -2,58 +2,48 @@ import { getLastDayCandle, getMyAccount, buy, sell } from '../api'
 import { Candle, Balance } from '../types/@api'
 import ENV from '../../env'
 
-const MARKET = ENV.MARKET
-const CRYPTO_SYMBOL = ENV.CRYPTO_SYMBOL
-const HIGH_TRIGGER_RATE = ENV.HIGH_TRIGGER_RATE
-const LOW_TRIGGER_RATE = ENV.LOW_TRIGGER_RATE
+const { MARKET, CRYPTO_SYMBOL, HIGH_TRIGGER_RATE, LOW_TRIGGER_RATE } = ENV
 
-export default {
-  buy: buyCryto,
-  sell: sellAll,
-}
+const MINUMUM_BUY_AMOUNT = 10050
+const MINUMUM_SELL_AMOUNT = 0.0005
+const MIMUMUM_TRANSACTION_UNIT = 1000
+const TRADING_FEE = 0.0005
 
 async function buyCryto() {
   const myAccount: Balance[] = await getMyAccount()
-  let myBalance: number = 0
 
-  myAccount.forEach(({ balance, currency }: Balance) => {
-    if (currency === 'KRW') {
-      const balanceKRW = Number(balance).toFixed(0)
-      myBalance = Number(balanceKRW)
-    }
-  })
+  const { balance } =
+    myAccount.find(({ currency }: Balance) => currency === 'KRW') || {}
+  const myBalance = Number(Number(balance).toFixed(0))
+  const fee = myBalance * TRADING_FEE
 
-  const fee = myBalance * 0.0005
-
-  if (myBalance > 10050) {
+  if (myBalance > MINUMUM_BUY_AMOUNT) {
     buy(MARKET, myBalance - fee)
   }
 }
 
 async function sellAll() {
   const myAccount: Balance[] = await getMyAccount()
-  let totalBalance: number = 0
-  let avgBuyPrice: number = 0
+  const { balance: totalBalance, avg_buy_price: avgBuyPrice } =
+    myAccount.find(({ currency }: Balance) => currency === CRYPTO_SYMBOL) || {}
 
-  myAccount.forEach((balance: Balance) => {
-    if (balance.currency === CRYPTO_SYMBOL) {
-      totalBalance = balance.balance
-      avgBuyPrice = balance.avg_buy_price
-    }
-  })
+  if (!avgBuyPrice || !totalBalance) {
+    return
+  }
 
-  const high =
-    Number(((avgBuyPrice * HIGH_TRIGGER_RATE) / 1000).toFixed(0)) * 1000
-  const row =
-    Number(((avgBuyPrice * LOW_TRIGGER_RATE) / 1000).toFixed(0)) * 1000
+  const high = generatePrice(avgBuyPrice, HIGH_TRIGGER_RATE)
+  const row = generatePrice(avgBuyPrice, LOW_TRIGGER_RATE)
 
   console.log('high', high)
   console.log('row', row)
 
-  if (totalBalance >= 0.0005) {
-    const candle: Candle[] = await getLastDayCandle(MARKET, 2)
-    const currentCandle = candle[0]
-    const currentPrice = currentCandle.trade_price
+  if (totalBalance >= MINUMUM_SELL_AMOUNT) {
+    const candle: Candle[] = await getLastDayCandle({
+      market: MARKET,
+      count: 2,
+    })
+    const [currentCandle] = candle
+    const { trade_price: currentPrice } = currentCandle
 
     if (high <= currentPrice) {
       sell({
@@ -71,4 +61,16 @@ async function sellAll() {
       })
     }
   }
+}
+
+const generatePrice = (price: number, rate: number) => {
+  return (
+    Number(((price * rate) / MIMUMUM_TRANSACTION_UNIT).toFixed(0)) *
+    MIMUMUM_TRANSACTION_UNIT
+  )
+}
+
+export default {
+  buy: buyCryto,
+  sell: sellAll,
 }
