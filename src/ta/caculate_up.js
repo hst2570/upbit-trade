@@ -1,38 +1,50 @@
-const data1 = require('./data/2017_10_26.json')
-const data2 = require('./data/2018_10_26.json')
-const data3 = require('./data/2019_10_26.json')
-const data4 = require('./data/2020_10_26.json')
-const data5 = require('./data/2021_10_26.json')
-const data6 = require('./data/2022_10_26.json')
-const data7 = require('./data/2023_10_26.json')
+const data1 = require('./data/up/2017_12_02_up.json')
+const data2 = require('./data/up/2018_06_20_up.json')
+const data3 = require('./data/up/2019_01_06_up.json')
+const data4 = require('./data/up/2019_07_25_up.json')
+const data5 = require('./data/up/2020_02_10_up.json')
+const data6 = require('./data/up/2020_08_28_up.json')
+const data7 = require('./data/up/2021_03_16_up.json')
+const data8 = require('./data/up/2021_10_02_up.json')
+const data9 = require('./data/up/2022_04_20_up.json')
+const data10 = require('./data/up/2022_11_06_up.json')
+const data11 = require('./data/up/2023_05_25_up.json')
+const data12 = require('./data/up/2023_12_11_up.json')
 
 const candles = [
-  ...data1.data.quotes,
-  ...data2.data.quotes,
-  ...data3.data.quotes,
-  ...data4.data.quotes,
-  ...data5.data.quotes,
-  ...data6.data.quotes,
-  ...data7.data.quotes,
+  ...data1.reverse(),
+  ...data2.reverse(),
+  ...data3.reverse(),
+  ...data4.reverse(),
+  ...data5.reverse(),
+  ...data6.reverse(),
+  ...data7.reverse(),
+  ...data8.reverse(),
+  ...data9.reverse(),
+  ...data10.reverse(),
+  ...data11.reverse(),
+  ...data12.reverse(),
 ]
 
 /*
-2017-10-26 00:00:00 = 1508943600
-2018-10-26 00:00:00 = 1540489200
-2019-10-26 00:00:00 = 1572025200
-2020-10-26 00:00:00 = 1603561200
-2021-10-26 00:00:00 = 1635097200
-2022-10-26 00:00:00 = 1666633200
-2023-10-26 00:00:00 = 1698169200
-
-https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeStart=1508943600&timeEnd=1540489200&interval=1d&convertId=2781
-https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeStart=1540489200&timeEnd=1572025200&interval=1d&convertId=2781
-https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeStart=1572025200&timeEnd=1603561200&interval=1d&convertId=2781
-https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeStart=1603561200&timeEnd=1635097200&interval=1d&convertId=2781
-https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeStart=1635097200&timeEnd=1666633200&interval=1d&convertId=2781
-https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical?id=1&timeStart=1666633200&timeEnd=1698169200&interval=1d&convertId=2781
-
-curl https://api.coinmarketcap.com/data-api/v3.1/cryptocurrency/historical\?id\=1\&timeStart\=1698169200\&interval\=1d\&convertId\=2781 > 2023_10_26.json
+{
+  market: 'KRW-BTC',
+  candle_date_time_utc: '2017-09-25T00:00:00',
+  candle_date_time_kst: '2017-09-25T09:00:00',
+  opening_price: 4201000.0,
+  high_price: 4333000.0,
+  low_price: 4175000.0,
+  trade_price: 4322000.0,
+  timestamp: 1506383997779,
+  candle_acc_trade_price: 560214613.8164,
+  candle_acc_trade_volume: 132.48475499,
+  prev_closing_price: 4201000.0,
+  change_price: 121000.0,
+  change_rate: 0.028802666,
+}
+curl --request GET \
+     --url 'https://api.upbit.com/v1/candles/days?market=KRW-BTC&to=2023-12-11T00%3A00%3A00%2B09%3A00&count=200' \
+     --header 'accept: application/json' > 2023_12_11_up.json
  */
 
 function addCommas(number) {
@@ -55,9 +67,9 @@ let balance = initBalance
 let maxBalance = 0
 console.log('candles, ', candles.length)
 
-// calculateWinProbability(1.131, 0.992)
+// calculateWinProbability(2.096, 0.996)
 
-for (let i = 1.001; i < 2; i = i + 0.001) {
+for (let i = 1.001; i < 3; i = i + 0.001) {
   for (let j = 0.999; j > 0; j = j - 0.001) {
     /* */
     try {
@@ -149,27 +161,55 @@ function calculateWinProbability(
   let lose = 0
   let currentPrice = 0
   let lastPrice = 0
+  let lowCount = 0
+  let weight = 0
+  let before = ''
 
   if (winRate - loseRate > 0.5) {
     // return
   }
 
+  /*
+    {
+      market: 'KRW-BTC',
+      candle_date_time_utc: '2017-09-25T00:00:00',
+      candle_date_time_kst: '2017-09-25T09:00:00',
+      opening_price: 4201000.0,
+      high_price: 4333000.0,
+      low_price: 4175000.0,
+      trade_price: 4322000.0,
+      timestamp: 1506383997779,
+      candle_acc_trade_price: 560214613.8164,
+      candle_acc_trade_volume: 132.48475499,
+      prev_closing_price: 4201000.0,
+      change_price: 121000.0,
+      change_rate: 0.028802666,
+    }
+   */
   candles.forEach(originCandle => {
-    const candle = originCandle.quote
-    let open = candle.open
-    let close = candle.close
-    let high = candle.high
-    let row = candle.low
+    const {
+      opening_price: open,
+      trade_price: close,
+      high_price: high,
+      low_price: low,
+    } = originCandle
+
+    if (lowCount > 0) {
+      lowCount--
+      return
+    }
 
     if (currentPrice === 0) {
       currentPrice = open
     }
 
+    lastPrice = close
+
     let winTargetPrice = currentPrice * winRate
     let loseTargetPrice = currentPrice * loseRate
 
-    /* */
-    if (row <= loseTargetPrice) {
+    // console.log(open, close, high, low, winTargetPrice, loseTargetPrice)
+    if (low <= loseTargetPrice) {
       lose++
 
       balance =
@@ -178,6 +218,12 @@ function calculateWinProbability(
         balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
       balance = balance * 0.9995
       currentPrice = 0
+
+      if (before === 'lose') {
+        weight = weight + 1
+        lowCount += lowCount + weight
+      }
+      before = 'lose'
     } else if (high >= winTargetPrice) {
       win++
       balance =
@@ -187,9 +233,9 @@ function calculateWinProbability(
 
       balance = balance * 0.9995
       currentPrice = 0
+      before = 'win'
+      weight = 0
     }
-
-    lastPrice = close
 
     /*/
     if (high >= winTargetPrice) {
@@ -248,4 +294,7 @@ function calculateWinProbability(
   })
 
   balance = initBalance
+  lowCount = 0
+  weight = 0
+  before = ''
 }
