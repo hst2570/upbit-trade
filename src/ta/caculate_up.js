@@ -12,19 +12,22 @@ const data11 = require('./data/up/2023_05_25_up.json')
 const data12 = require('./data/up/2023_12_11_up.json')
 
 const candles = [
-  ...data1.reverse(),
-  ...data2.reverse(),
-  ...data3.reverse(),
-  ...data4.reverse(),
-  ...data5.reverse(),
-  ...data6.reverse(),
-  ...data7.reverse(),
-  ...data8.reverse(),
-  ...data9.reverse(),
-  ...data10.reverse(),
-  ...data11.reverse(),
+  // ...data1.reverse(),
+  // ...data2.reverse(),
+  // ...data3.reverse(),
+  // ...data4.reverse(),
+  // ...data5.reverse(),
+  // ...data6.reverse(),
+  // ...data7.reverse(),
+  // ...data8.reverse(),
+  // ...data9.reverse(),
+  // ...data10.reverse(),
+  // ...data11.reverse(),
   ...data12.reverse(),
 ]
+// .filter(({ candle_date_time_utc: date }) => {
+//   return date > '2020-01-01'
+// })
 
 /*
 {
@@ -61,7 +64,7 @@ const winInfo = {
   ratio: 0,
 }
 let winList = []
-const initBalance = 10_000
+const initBalance = 100
 let balance = initBalance
 
 let maxBalance = 0
@@ -69,7 +72,8 @@ console.log('candles, ', candles.length)
 
 // calculateWinProbability(2.096, 0.996)
 
-for (let i = 1.001; i < 3; i = i + 0.001) {
+const MAX = 3
+for (let i = 1.001; i < MAX; i = i + 0.001) {
   for (let j = 0.999; j > 0; j = j - 0.001) {
     /* */
     try {
@@ -81,16 +85,16 @@ for (let i = 1.001; i < 3; i = i + 0.001) {
       investmentRatio <= 1;
       investmentRatio = investmentRatio + 0.1
     ) {
-      for (let leverage = 1; leverage <= 25; leverage = leverage + 1) {
-        try {
-          calculateWinProbability(i, j, investmentRatio, leverage)
-        } catch {}
-      }
+      // for (let leverage = 1; leverage <= 25; leverage = leverage + 1) {
+      try {
+        calculateWinProbability(i, j, investmentRatio)
+      } catch {}
+      // }
     }
     /* */
   }
   console.clear()
-  console.info(`${(i * 100 - 100).toFixed(1)}%`)
+  console.info(`${((i * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
 }
 
 const sortedList = winList
