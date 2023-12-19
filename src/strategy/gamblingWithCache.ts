@@ -13,15 +13,6 @@ const TRADING_FEE = 0.0005
 async function buyCryto() {
   const { beforeTradeState = '', weight = 0, loseCount = 0 } = loadCache()
 
-  if (loseCount > 0) {
-    saveCache({
-      beforeTradeState,
-      weight,
-      loseCount: loseCount - 1,
-    })
-    return
-  }
-
   const myAccount: Balance[] = await getMyAccount()
   const { balance } =
     myAccount.find(({ currency }: Balance) => currency === 'KRW') || {}
@@ -29,6 +20,14 @@ async function buyCryto() {
   const fee = myBalance * TRADING_FEE
 
   if (myBalance > MINUMUM_BUY_AMOUNT) {
+    if (loseCount > 0) {
+      saveCache({
+        beforeTradeState,
+        weight,
+        loseCount: loseCount - 1,
+      })
+      return
+    }
     buy(MARKET, myBalance - fee)
   }
 }
