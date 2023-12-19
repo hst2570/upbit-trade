@@ -50,7 +50,8 @@ console.log('candles, ', candles.length)
 
 // calculateWinProbability(2.096, 0.996)
 
-for (let i = 1.001; i < 3; i = i + 0.001) {
+const MAX = 3
+for (let i = 1.001; i < MAX; i = i + 0.001) {
   for (let j = 0.999; j > 0; j = j - 0.001) {
     /* */
     try {
@@ -71,7 +72,7 @@ for (let i = 1.001; i < 3; i = i + 0.001) {
     /* */
   }
   console.clear()
-  console.info(`${(i * 100 - 100).toFixed(1)}%`)
+  console.info(`${((i * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
 }
 
 const sortedList = winList
@@ -201,7 +202,7 @@ function calculateWinProbability(
       currentPrice = 0
 
       if (before === 'lose') {
-        weight = weight + 1
+        // weight = weight +
         lowCount += lowCount + weight
       }
       before = 'lose'

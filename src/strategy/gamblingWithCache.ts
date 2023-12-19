@@ -9,9 +9,10 @@ const MINUMUM_BUY_AMOUNT = 10050
 const MINUMUM_SELL_AMOUNT = 0.0005
 const MIMUMUM_TRANSACTION_UNIT = 1000
 const TRADING_FEE = 0.0005
-const { beforeTradeState = '', weight = 0, loseCount = 0 } = loadCache()
 
 async function buyCryto() {
+  const { beforeTradeState = '', weight = 0, loseCount = 0 } = loadCache()
+
   if (loseCount > 0) {
     saveCache({
       beforeTradeState,
@@ -33,6 +34,7 @@ async function buyCryto() {
 }
 
 async function sellAll() {
+  const { weight = 0 } = loadCache()
   const myAccount: Balance[] = await getMyAccount()
   const { balance: totalBalance, avg_buy_price: avgBuyPrice } =
     myAccount.find(({ currency }: Balance) => currency === CRYPTO_SYMBOL) || {}
