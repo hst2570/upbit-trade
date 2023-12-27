@@ -68,6 +68,7 @@ async function sellAll() {
         loseCount: 0,
       })
     } else if (row >= currentPrice) {
+      const nextWeight = weight + 1
       sell({
         market: MARKET,
         volume: totalBalance,
@@ -77,8 +78,8 @@ async function sellAll() {
 
       saveCache({
         beforeTradeState: 'lose',
-        weight: weight + 1,
-        loseCount: weight > 0 ? weight : 1,
+        weight: nextWeight,
+        loseCount: nextWeight > 0 ? weight : 1,
       })
     }
   }

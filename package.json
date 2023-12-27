@@ -4,6 +4,7 @@
   "description": "업비트 트레이딩 스크립트",
   "main": "src/index.ts",
   "scripts": {
+    "start": "bun run runCronWithCache",
     "runCron": "bun run batch/cron.ts&",
     "runCronWithCache": "bun run batch/cronWithCache.ts&"
   },

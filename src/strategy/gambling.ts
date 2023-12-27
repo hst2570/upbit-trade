@@ -34,9 +34,6 @@ async function sellAll() {
   const high = generatePrice(avgBuyPrice, HIGH_TRIGGER_RATE)
   const row = generatePrice(avgBuyPrice, LOW_TRIGGER_RATE)
 
-  console.log('high', high)
-  console.log('row', row)
-
   if (totalBalance >= MINUMUM_SELL_AMOUNT) {
     const candle: Candle[] = await getLastDayCandle({
       market: MARKET,
