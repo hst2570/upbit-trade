@@ -1,34 +1,9 @@
-const data1 = require('./data/up/2017_12_02_up.json')
-const data2 = require('./data/up/2018_06_20_up.json')
-const data3 = require('./data/up/2019_01_06_up.json')
-const data4 = require('./data/up/2019_07_25_up.json')
-const data5 = require('./data/up/2020_02_10_up.json')
-const data6 = require('./data/up/2020_08_28_up.json')
-const data7 = require('./data/up/2021_03_16_up.json')
-const data8 = require('./data/up/2021_10_02_up.json')
-const data9 = require('./data/up/2022_04_20_up.json')
-const data10 = require('./data/up/2022_11_06_up.json')
-const data11 = require('./data/up/2023_05_25_up.json')
-const data12 = require('./data/up/2023_12_11_up.json')
-
-const candles = [
-  ...data1.reverse(),
-  ...data2.reverse(),
-  ...data3.reverse(),
-  ...data4.reverse(),
-  ...data5.reverse(),
-  ...data6.reverse(),
-  ...data7.reverse(),
-  ...data8.reverse(),
-  ...data9.reverse(),
-  ...data10.reverse(),
-  ...data11.reverse(),
-  ...data12.reverse(),
-]
+const data = require('./data/NASDAQ/1D_inverster.json')
 // .filter(({ candle_date_time_utc: date }) => {
 //   return date > '2020-01-01'
 // })
 
+const candles = data.data
 /*
 curl --request GET \
      --url 'https://api.upbit.com/v1/candles/days?market=KRW-BTC&to=2023-12-11T00%3A00%3A00%2B09%3A00&count=200' \
@@ -133,7 +108,7 @@ sortedList.forEach(item => {
       3
     )} / prob: ${item.probability.toFixed(2)} wc: ${item.winCount} / lc: ${
       item.loseCount
-    } / bal: ${item.balance.toFixed(0)} / weight: ${item.weight.toFixed(1)}`
+    } / bal: ${item.balance.toFixed(0)}`
 
     // / ratio: ${item.ratio.toFixed(
     //   2
@@ -161,16 +136,12 @@ function calculateWinProbability(
   let before = ''
 
   candles.forEach(originCandle => {
-    const {
-      opening_price: open,
-      trade_price: close,
-      high_price: high,
-      low_price: low,
-    } = originCandle
+    // 0: time, 1:open 2:high 3:low 4:close 5:volume
+    const [time, open, high, low, close] = originCandle
 
     if (lowCount > 0) {
       lowCount--
-      return
+      // return
     }
 
     if (currentPrice === 0) {

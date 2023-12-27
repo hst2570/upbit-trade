@@ -8,21 +8,6 @@ const candles = data1.sort((a, b) => {
 // })
 
 /*
-{
-  market: 'KRW-BTC',
-  candle_date_time_utc: '2017-09-25T00:00:00',
-  candle_date_time_kst: '2017-09-25T09:00:00',
-  opening_price: 4201000.0,
-  high_price: 4333000.0,
-  low_price: 4175000.0,
-  trade_price: 4322000.0,
-  timestamp: 1506383997779,
-  candle_acc_trade_price: 560214613.8164,
-  candle_acc_trade_volume: 132.48475499,
-  prev_closing_price: 4201000.0,
-  change_price: 121000.0,
-  change_rate: 0.028802666,
-}
 curl --request GET \
      --url 'https://api.upbit.com/v1/candles/days?market=KRW-BTC&to=2023-12-11T00%3A00%3A00%2B09%3A00&count=200' \
      --header 'accept: application/json' > 2023_12_11_up.json
@@ -42,7 +27,7 @@ const winInfo = {
   ratio: 0,
 }
 let winList = []
-const initBalance = 10_000
+const initBalance = 1
 let balance = initBalance
 
 let maxBalance = 0
@@ -147,27 +132,6 @@ function calculateWinProbability(
   let weight = 0
   let before = ''
 
-  if (winRate - loseRate > 0.5) {
-    // return
-  }
-
-  /*
-    {
-      market: 'KRW-BTC',
-      candle_date_time_utc: '2017-09-25T00:00:00',
-      candle_date_time_kst: '2017-09-25T09:00:00',
-      opening_price: 4201000.0,
-      high_price: 4333000.0,
-      low_price: 4175000.0,
-      trade_price: 4322000.0,
-      timestamp: 1506383997779,
-      candle_acc_trade_price: 560214613.8164,
-      candle_acc_trade_volume: 132.48475499,
-      prev_closing_price: 4201000.0,
-      change_price: 121000.0,
-      change_rate: 0.028802666,
-    }
-   */
   candles.forEach(originCandle => {
     const {
       opening_price: open,
@@ -178,7 +142,7 @@ function calculateWinProbability(
 
     if (lowCount > 0) {
       lowCount--
-      // return
+      return
     }
 
     if (currentPrice === 0) {
@@ -190,7 +154,6 @@ function calculateWinProbability(
     let winTargetPrice = currentPrice * winRate
     let loseTargetPrice = currentPrice * loseRate
 
-    // console.log(open, close, high, low, winTargetPrice, loseTargetPrice)
     if (low <= loseTargetPrice) {
       lose++
 
@@ -199,7 +162,8 @@ function calculateWinProbability(
         balance * investmentRatio -
         balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
       balance = balance * 0.9995
-      currentPrice = 0
+      // currentPrice = 0
+      currentPrice = loseTargetPrice
 
       if (before === 'lose') {
         // weight = weight +
@@ -214,32 +178,11 @@ function calculateWinProbability(
         balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
 
       balance = balance * 0.9995
-      currentPrice = 0
+      // currentPrice = 0
+      currentPrice = winTargetPrice
       before = 'win'
       weight = 0
     }
-
-    /*/
-    if (high >= winTargetPrice) {
-      win++
-      balance =
-        (1 - investmentRatio) * balance +
-        balance * investmentRatio +
-        balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
-
-      balance = balance * 0.9995
-      currentPrice = 0
-    } else if (row <= loseTargetPrice) {
-      lose++
-      balance =
-        (1 - investmentRatio) * balance +
-        balance * investmentRatio -
-        balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
-      balance = balance * 0.9995
-      currentPrice = 0
-    }
-
-    /* */
 
     if (balance < 0) {
       throw new Error()
