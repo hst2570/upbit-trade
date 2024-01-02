@@ -11,16 +11,39 @@ async function buyCryto() {
   const myAccount: Balance[] = await getMyAccount()
   const { balance } =
     myAccount.find(({ currency }: Balance) => currency === 'KRW') || {}
+  const diabledRatioList: number[] = []
+  const disabledList = myAccount.map(
+    ({ currency, balance: currencyBalance }: Balance) => {
+      const { MARKET: disableMarket, INVESTMENT_RATIO: disableRatio } =
+        INVESTMENT_LIST.find(
+          ({ CRYPTO_SYMBOL }) => CRYPTO_SYMBOL === currency
+        ) || {}
+
+      if (disableMarket && currencyBalance > 0 && disableRatio) {
+        diabledRatioList.push(disableRatio)
+        return disableMarket
+      }
+    }
+  )
 
   INVESTMENT_LIST.forEach(async investment => {
     const { MARKET, INVESTMENT_RATIO } = investment
+
+    if (disabledList.includes(MARKET)) {
+      return
+    }
+
+    const disableRatio = Number(
+      (1 - diabledRatioList.reduce((acc, cur) => acc + cur, 0)).toFixed(1)
+    )
     const {
       beforeTradeState = '',
       weight = 0,
       loseCount = 0,
     } = loadCache(MARKET)
     const myBalance = Number(Number(balance).toFixed(0))
-    const buyAmount = myBalance * INVESTMENT_RATIO
+    const ratio = Number((INVESTMENT_RATIO / disableRatio).toFixed(2))
+    const buyAmount = myBalance * ratio
     const fee = buyAmount * TRADING_FEE
 
     if (buyAmount > MINUMUM_BUY_AMOUNT) {
