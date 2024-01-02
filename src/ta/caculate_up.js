@@ -10,7 +10,9 @@ const data9 = require('./data/up/2022_04_20_up.json')
 const data10 = require('./data/up/2022_11_06_up.json')
 const data11 = require('./data/up/2023_05_25_up.json')
 const data12 = require('./data/up/2023_12_11_up.json')
-
+const data = require('./data/up/KRW-SOL-day.json')
+// const data = require('./data/up/KRW-ETH-day.json')
+// const candles = [...data]
 const candles = [
   ...data1.reverse(),
   ...data2.reverse(),
@@ -49,16 +51,16 @@ const winInfo = {
   ratio: 0,
 }
 
-const initBalance = 1
+const initBalance = 10000000
 const MAX = 3
 
 let winList = []
 let balance = initBalance
 let maxBalance = 0
 
-// calculateWinProbability(2.096, 0.996)
+// calculateWinProbability(1.96, 0.984)
 
-for (let i = 1.001; i < MAX; i = i + 0.001) {
+for (let i = 1.01; i < MAX; i = i + 0.01) {
   for (let j = 0.999; j > 0; j = j - 0.001) {
     // for (let w = 0; w < 3; w = w + 0.1) {
     /* */
@@ -122,9 +124,9 @@ const sortedList = winList
     return acc
   }, [])
   .sort((a, b) => b.balance - a.balance)
-  .slice(0, 10)
+  // .slice(0, 10)
   .reverse()
-console.clear()
+// console.clear()
 sortedList.forEach(item => {
   console.log(
     `--- \nwinRate: ${item.winRate.toFixed(
@@ -133,7 +135,7 @@ sortedList.forEach(item => {
       3
     )} / prob: ${item.probability.toFixed(2)} wc: ${item.winCount} / lc: ${
       item.loseCount
-    } / bal: ${item.balance.toFixed(0)} / weight: ${item.weight.toFixed(1)}`
+    } / bal: ${item.balance.toFixed(0)}`
 
     // / ratio: ${item.ratio.toFixed(
     //   2
@@ -159,6 +161,7 @@ function calculateWinProbability(
   let lowCount = 0
   let weight = 0
   let before = ''
+  let lowBalance = 100000000000
 
   candles.forEach(originCandle => {
     const {
@@ -194,7 +197,7 @@ function calculateWinProbability(
 
       if (before === 'lose') {
         weight = weight + weightValue
-        lowCount += lowCount + weight
+        lowCount = weight
       }
       before = 'lose'
     } else if (high >= winTargetPrice) {
@@ -203,11 +206,15 @@ function calculateWinProbability(
         (1 - investmentRatio) * balance +
         balance * investmentRatio +
         balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
-
+      // console.log('balance win: ', balance)
       balance = balance * 0.9995
       currentPrice = 0
       before = 'win'
       weight = 0
+    }
+
+    if (lowBalance > balance) {
+      lowBalance = balance
     }
 
     if (balance < 0) {
@@ -231,6 +238,7 @@ function calculateWinProbability(
     winInfo.balance = balance
     winInfo.ratio = investmentRatio
     winInfo.leverage = leverage
+    winInfo.lowBalance = lowBalance
   }
 
   winList.push({

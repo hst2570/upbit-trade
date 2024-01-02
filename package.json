@@ -6,7 +6,8 @@
   "scripts": {
     "start": "bun run runCronWithCache",
     "runCron": "bun run batch/cron.ts&",
-    "runCronWithCache": "bun run batch/cronWithCache.ts&"
+    "runCronWithCache": "bun run batch/cronWithCache.ts&",
+    "cronList": "bun run batch/cronWithList.ts&"
   },
   "author": "",
   "license": "ISC",

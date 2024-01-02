@@ -79,7 +79,7 @@ async function sellAll() {
       saveCache({
         beforeTradeState: 'lose',
         weight: nextWeight,
-        loseCount: nextWeight > 0 ? weight : 1,
+        loseCount: nextWeight,
       })
     }
   }

@@ -35,7 +35,7 @@ let maxBalance = 0
 
 for (let i = 1.001; i < MAX; i = i + 0.001) {
   for (let j = 0.999; j > 0; j = j - 0.001) {
-    // for (let w = 0; w < 3; w = w + 0.1) {
+    // for (let w = 0; w < 90; w = w + 1) {
     /* */
     try {
       calculateWinProbability(i, j)
@@ -119,6 +119,7 @@ sortedList.forEach(item => {
 winInfo.balance = addCommas(winInfo.balance.toFixed(0))
 
 console.log('winInfo: ', winInfo)
+console.log('candle: ', candles.length)
 
 function calculateWinProbability(
   winRate,
@@ -137,11 +138,11 @@ function calculateWinProbability(
 
   candles.forEach(originCandle => {
     // 0: time, 1:open 2:high 3:low 4:close 5:volume
-    const [time, open, high, low, close] = originCandle
+    const [, open, high, low, close] = originCandle
 
     if (lowCount > 0) {
       lowCount--
-      // return
+      return
     }
 
     if (currentPrice === 0) {
@@ -160,7 +161,7 @@ function calculateWinProbability(
         (1 - investmentRatio) * balance +
         balance * investmentRatio -
         balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
-      balance = balance * 0.9995
+      balance = balance * 0.999
       currentPrice = 0
 
       if (before === 'lose') {
@@ -175,7 +176,7 @@ function calculateWinProbability(
         balance * investmentRatio +
         balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
 
-      balance = balance * 0.9995
+      balance = balance * 0.999
       currentPrice = 0
       before = 'win'
       weight = 0

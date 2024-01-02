@@ -12,11 +12,11 @@ fetch('https://api.upbit.com/v1/candles/minutes/1?market=KRW-BTC&count=1', optio
   .catch(err => console.error(err));
  */
 import fs from 'fs'
-
+const market = 'KRW-ETH'
 // const baseUrl =
 //   'https://api.upbit.com/v1/candles/minutes/60?market=KRW-BTC&count=200'
-const baseUrl =
-  'https://api.upbit.com/v1/candles/weeks?market=KRW-BTC&count=200'
+// const baseUrl = `https://api.upbit.com/v1/candles/minutes/60?market=${market}&count=200`
+const baseUrl = `https://api.upbit.com/v1/candles/days?market=${market}&count=200`
 const list = []
 
 const getData = async time => {
@@ -49,6 +49,7 @@ const time = `${now.getFullYear()}-${now.getMonth() + 1}-${
 }T${now.getHours()}:00:00`
 
 const endDate = '2017-09-26'
+// const endDate = '2021-10-15'
 
 ;(async () => {
   await getData()
@@ -65,9 +66,9 @@ const endDate = '2017-09-26'
     console.log(new Date(lastDate))
   }
 
-  list = list.sort((a, b) => {
+  const sortedList = list.sort((a, b) => {
     return a.candle_date_time_utc > b.candle_date_time_utc
   })
 
-  fs.writeFileSync(`weeks.json`, JSON.stringify(list), 'utf8')
+  fs.writeFileSync(`${market}-day.json`, JSON.stringify(sortedList), 'utf8')
 })()

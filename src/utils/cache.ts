@@ -8,19 +8,23 @@ export type CacheState = {
   loseCount: number
 }
 
-export const saveCache = (context: CacheState) => {
+export const saveCache = (context: CacheState, key: string = '') => {
   try {
     fs.mkdirSync(cachePath, { recursive: true })
-    fs.writeFileSync(`${cachePath}/state`, JSON.stringify(context), 'utf8')
+    fs.writeFileSync(
+      `${cachePath}/state${key}`,
+      JSON.stringify(context),
+      'utf8'
+    )
   } catch (e) {
     console.log(e)
     return {}
   }
 }
 
-export const loadCache = () => {
+export const loadCache = (key: string = '') => {
   try {
-    const data = fs.readFileSync(`${cachePath}/state`, 'utf8')
+    const data = fs.readFileSync(`${cachePath}/state${key}`, 'utf8')
     return JSON.parse(data)
   } catch (e) {
     return {}
