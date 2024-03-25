@@ -1,3 +1,7 @@
+/** 
+ * @deprecated 
+ * using gamblingWithList.ts instead
+ * */
 import { getLastDayCandle, getMyAccount, buy, sell } from '../api'
 import { Candle, Balance } from '../types/@api'
 import ENV from '../../env'

@@ -9,7 +9,7 @@ import {
 import { sendNotification } from '../notification'
 
 export const getLastCandle = (unit: number, market: string, count: number) => {
-  let query: any = {}
+  const query: any = {}
 
   if (market) {
     query['market'] = market

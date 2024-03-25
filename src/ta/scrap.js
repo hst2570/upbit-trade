@@ -12,7 +12,20 @@ fetch('https://api.upbit.com/v1/candles/minutes/1?market=KRW-BTC&count=1', optio
   .catch(err => console.error(err));
  */
 import fs from 'fs'
-const market = 'KRW-ETH'
+const now = new Date()
+/* format: yyyy-MM-dd'T'HH:mm:ss
+ */
+const time = `${now.getFullYear()}-${now.getMonth() + 1}-${
+  now.getDate() - 1
+}T${now.getHours()}:00:00`
+
+const startDate = '2017-09-26'
+const market = 'KRW-BTC'
+// const startDate = '2021-10-15'
+// const market = 'KRW-SOL'
+// const startDate = '2020-08-05'
+// const market = 'KRW-BORA'
+
 // const baseUrl =
 //   'https://api.upbit.com/v1/candles/minutes/60?market=KRW-BTC&count=200'
 // const baseUrl = `https://api.upbit.com/v1/candles/minutes/60?market=${market}&count=200`
@@ -41,28 +54,18 @@ const getLastDate = () => {
   return lastDate
 }
 
-const now = new Date()
-/* format: yyyy-MM-dd'T'HH:mm:ss
- */
-const time = `${now.getFullYear()}-${now.getMonth() + 1}-${
-  now.getDate() - 1
-}T${now.getHours()}:00:00`
-
-const endDate = '2017-09-26'
-// const endDate = '2021-10-15'
-
 ;(async () => {
   await getData()
 
   let lastDate = getLastDate()
-  const end = new Date(endDate)
+  const start = new Date(startDate)
 
-  while (new Date(lastDate) > end) {
+  while (new Date(lastDate) > start) {
     await getData(lastDate)
     lastDate = getLastDate()
     await new Promise(resolve => setTimeout(resolve, 100))
 
-    console.log(end)
+    console.log(start)
     console.log(new Date(lastDate))
   }
 

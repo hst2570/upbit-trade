@@ -11,6 +11,8 @@
 
 ## running batch/cron
 
+- bun.js 설치
+
 ```bash
 $ cp env/index.sample.ts env/index.ts
 # edit and add env, env/index.sample.ts -> index.ts
@@ -28,3 +30,4 @@ $ bun run cronList
 - data -> 20\*\*.json -> 코인마켓캡 데이터
 - data -> up -> 업비트 데이터
 - NASDAQ -> 나스닥 데이터
+- caculate_up.js를 사용해서 주로 계산함

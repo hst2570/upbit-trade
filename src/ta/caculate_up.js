@@ -1,46 +1,20 @@
-const data1 = require('./data/up/2017_12_02_up.json')
-const data2 = require('./data/up/2018_06_20_up.json')
-const data3 = require('./data/up/2019_01_06_up.json')
-const data4 = require('./data/up/2019_07_25_up.json')
-const data5 = require('./data/up/2020_02_10_up.json')
-const data6 = require('./data/up/2020_08_28_up.json')
-const data7 = require('./data/up/2021_03_16_up.json')
-const data8 = require('./data/up/2021_10_02_up.json')
-const data9 = require('./data/up/2022_04_20_up.json')
-const data10 = require('./data/up/2022_11_06_up.json')
-const data11 = require('./data/up/2023_05_25_up.json')
-const data12 = require('./data/up/2023_12_11_up.json')
-const data = require('./data/up/KRW-SOL-day.json')
-// const data = require('./data/up/KRW-ETH-day.json')
-// const candles = [...data]
-const candles = [
-  ...data1.reverse(),
-  ...data2.reverse(),
-  ...data3.reverse(),
-  ...data4.reverse(),
-  ...data5.reverse(),
-  ...data6.reverse(),
-  ...data7.reverse(),
-  ...data8.reverse(),
-  ...data9.reverse(),
-  ...data10.reverse(),
-  ...data11.reverse(),
-  ...data12.reverse(),
-]
-// .filter(({ candle_date_time_utc: date }) => {
-//   return date > '2020-01-01'
-// })
+// const data = require('./data/up/KRW-BORA-day.json') /** 보라 데이터 */
+// const data = require('./data/up/KRW-SOL-day.json') /** 솔라나 데이터 */
+const data = require('./data/up/KRW-BTC-day.json') /** 비트코인 데이터 */
+// const data = require('./data/up/KRW-ETH-day.json') /** 이더리움 데이터 */
 
-/*
-curl --request GET \
-     --url 'https://api.upbit.com/v1/candles/days?market=KRW-BTC&to=2023-12-11T00%3A00%3A00%2B09%3A00&count=200' \
-     --header 'accept: application/json' > 2023_12_11_up.json
- */
+const candles = [...data]
+/** 특정 날짜로 필터링 하고 싶을때 아래 주석 코드 해제 
+ .filter(({ candle_date_time_utc: date }) => {
+   return date > '2018-10-01'
+ })
+*/
 
 function addCommas(number) {
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
+/** 가장 많은 수익을 얻은 데이터 저장용 변수 */
 const winInfo = {
   winRate: 1,
   loseRate: 1,
@@ -51,43 +25,33 @@ const winInfo = {
   ratio: 0,
 }
 
-const initBalance = 10000000
+/** 초기 시작 금액 */
+const initBalance = 1_000_000
+/** 최대 수익률 */
 const MAX = 3
 
+/** 모든 경우의 수를 저장하는 변수 */
 let winList = []
+/** 수익률 저장을 위한 임시 변수 */
 let balance = initBalance
+/** 최대값 저장용 임시 변수 */
 let maxBalance = 0
 
-// calculateWinProbability(1.96, 0.984)
+// calculateWinProbability(2.06, 0.984) /** 특정 값을 넣어서 계산 가능 */
 
-for (let i = 1.01; i < MAX; i = i + 0.01) {
+for (let i = 1.001; i < MAX; i = i + 0.001) {
   for (let j = 0.999; j > 0; j = j - 0.001) {
-    // for (let w = 0; w < 3; w = w + 0.1) {
-    /* */
     try {
       calculateWinProbability(i, j)
     } catch (e) {
       console.log(e)
     }
-    // }
-    /*/
-    for (
-      let investmentRatio = 0.1;
-      investmentRatio <= 1;
-      investmentRatio = investmentRatio + 0.1
-    ) {
-      // for (let leverage = 1; leverage <= 25; leverage = leverage + 1) {
-      try {
-        calculateWinProbability(i, j, investmentRatio)
-      } catch {}
-      // }
-    }
-    /* */
   }
   console.clear()
   console.info(`${((i * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
 }
 
+/** 소숫점 작은 단위를 하나의 값으로 합치기 위해 reduce 해줌 */
 const sortedList = winList
   .reduce((acc, item) => {
     const winRateFixed = item.winRate.toFixed(1)
@@ -124,9 +88,9 @@ const sortedList = winList
     return acc
   }, [])
   .sort((a, b) => b.balance - a.balance)
-  // .slice(0, 10)
   .reverse()
-// console.clear()
+
+/** 데이터 출력 부분 */
 sortedList.forEach(item => {
   console.log(
     `--- \nwinRate: ${item.winRate.toFixed(
@@ -143,25 +107,33 @@ sortedList.forEach(item => {
   )
 })
 
+/** 최대값 출력 부분 */
 winInfo.balance = addCommas(winInfo.balance.toFixed(0))
-
 console.log('winInfo: ', winInfo)
 
 function calculateWinProbability(
-  winRate,
-  loseRate = 1,
-  weightValue = 1,
-  investmentRatio = 1,
-  leverage = 1
+  winRate /** 승리 시 이득 */,
+  loseRate = 1 /** 패배 시 손해 */,
+  weightValue = 1 /** 패배 시 lowCount 증가율 */,
+  investmentRatio = 1 /** 투자 비율 */,
+  leverage = 1 /** 레버리지 */
 ) {
+  /** 승리 카운터용 변수 */
   let win = 0
+  /** 패배 카운터용 변슈 */
   let lose = 0
+  /** 포지션 가격 */
   let currentPrice = 0
+  /** 마지막 가격 */
   let lastPrice = 0
+  /** 패배 시 거래 스킵용 방어 변수 */
   let lowCount = 0
+  /** 가중치 */
   let weight = 0
+  /** 이전 상태, 승리 또는 배패 */
   let before = ''
-  let lowBalance = 100000000000
+  /** 최저 잔고 확인용 */
+  let lowBalance = 100000000000000
 
   candles.forEach(originCandle => {
     const {
@@ -171,23 +143,26 @@ function calculateWinProbability(
       low_price: low,
     } = originCandle
 
+    /** 패배가 연속으로 이어질 시 lowCount가 늘어나며 lowCount가 0이 될때까지 거래하지 않는다. */
     if (lowCount > 0) {
       lowCount--
       return
     }
 
+    /** 오픈 가격에 샀음 */
     if (currentPrice === 0) {
       currentPrice = open
     }
 
     lastPrice = close
 
-    const winTargetPrice = currentPrice * winRate
-    const loseTargetPrice = currentPrice * loseRate
+    const winTargetPrice =
+      currentPrice * winRate /** 이 가격이되면 승리, 이득 */
+    const loseTargetPrice =
+      currentPrice * loseRate /** 이 가격이되면 패배 손해 */
 
     if (low <= loseTargetPrice) {
       lose++
-
       balance =
         (1 - investmentRatio) * balance +
         balance * investmentRatio -
@@ -199,14 +174,15 @@ function calculateWinProbability(
         weight = weight + weightValue
         lowCount = weight
       }
-      before = 'lose'
+      before = 'lose' /** 이전 상태 계산용 변수 */
     } else if (high >= winTargetPrice) {
       win++
+
       balance =
         (1 - investmentRatio) * balance +
         balance * investmentRatio +
         balance * investmentRatio * leverage * (winRate.toFixed(4) - 1)
-      // console.log('balance win: ', balance)
+
       balance = balance * 0.9995
       currentPrice = 0
       before = 'win'
@@ -230,15 +206,23 @@ function calculateWinProbability(
 
   if (maxBalance < balance && winRate > 1 && loseRate < 1) {
     maxBalance = balance
-    winInfo.probability = winProbability
-    winInfo.winRate = winRate
-    winInfo.loseRate = loseRate
-    winInfo.winCount = win
-    winInfo.loseCount = lose
-    winInfo.balance = balance
-    winInfo.ratio = investmentRatio
-    winInfo.leverage = leverage
-    winInfo.lowBalance = lowBalance
+    winInfo.probability = winProbability /** 승리확률 */
+    winInfo.winRate = winRate /** 이득 비율 */
+    winInfo.loseRate = loseRate /** 손해 비율 */
+    winInfo.winCount = win /** 승리 횟수 */
+    winInfo.loseCount = lose /** 패배 횟수 */
+    winInfo.balance = balance /** 최종 밸런스 */
+    winInfo.ratio = investmentRatio /** 투자 비율 */
+    winInfo.leverage = leverage /** 레버리지 */
+    winInfo.lowBalance = lowBalance /** 최저 밸런스 */
+    /**
+     *  아래 세 변수를 추가한 이유
+     *  백테스트 후 포지션 입장 시 입장 가격과 lowCount를 설정용
+     *  .cahce 폴더 하위 알맞는 포지션 파일에 해당 데이터 저장
+     */
+    winInfo.weight = weight /** 마지막 포지션의 lowCount 가중치 */
+    winInfo.lowCount = lowCount /** 마지막 포지션의 lowCount */
+    winInfo.currentPrice = currentPrice /** 마지막 포지션의 가격 */
   }
 
   winList.push({
