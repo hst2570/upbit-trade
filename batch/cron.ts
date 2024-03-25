@@ -9,6 +9,6 @@ cron.schedule('0 9 * * *', () => {
 
 // running a task every 10 seconds
 cron.schedule('*/1 * * * * *', () => {
-  console.log('running a task every 10 seconds')
+  console.log('running a task every 1 seconds')
   gambling.sell()
 })
