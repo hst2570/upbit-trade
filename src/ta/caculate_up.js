@@ -153,8 +153,7 @@ function calculateWinProbability(
       balance = balance * 0.9995
       currentPrice = 0
       before = 'win'
-      weight = 4
-      lowCount = 0
+      weight = 0
     }
 
     if (lowBalance > balance) {
