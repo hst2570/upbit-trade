@@ -1,6 +1,6 @@
 // const data = require('./data/up/KRW-BORA-day.json') /** 보라 데이터 */
-// const data = require('./data/up/KRW-SOL-day.json') /** 솔라나 데이터 */
-const data = require('./data/up/KRW-BTC-day.json') /** 비트코인 데이터 */
+const data = require('./data/up/KRW-SOL-day.json') /** 솔라나 데이터 */
+// const data = require('./data/up/KRW-BTC-day.json') /** 비트코인 데이터 */
 // const data = require('./data/up/KRW-ETH-day.json') /** 이더리움 데이터 */
 
 const candles = [...data]
@@ -37,9 +37,9 @@ let balance = initBalance
 /** 최대값 저장용 임시 변수 */
 let maxBalance = 0
 
-// calculateWinProbability(2.06, 0.984) /** 특정 값을 넣어서 계산 가능 */
+calculateWinProbability(2.06, 0.984) /** 특정 값을 넣어서 계산 가능 */
 
-for (let i = 1.001; i < MAX; i = i + 0.001) {
+for (let i = 1.01; i < MAX; i = i + 0.01) {
   for (let j = 0.999; j > 0; j = j - 0.001) {
     try {
       calculateWinProbability(i, j)
@@ -51,43 +51,9 @@ for (let i = 1.001; i < MAX; i = i + 0.001) {
   console.info(`${((i * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
 }
 
-/** 소숫점 작은 단위를 하나의 값으로 합치기 위해 reduce 해줌 */
 const sortedList = winList
-  .reduce((acc, item) => {
-    const winRateFixed = item.winRate.toFixed(1)
-    const loseRateFixed = item.loseRate.toFixed(1)
-
-    let findItem = acc?.find(
-      accItem =>
-        accItem.winRateFixed === winRateFixed &&
-        accItem.loseRateFixed === loseRateFixed
-    )
-
-    let findIndex = acc?.findIndex(
-      accItem =>
-        accItem.winRateFixed === winRateFixed &&
-        accItem.loseRateFixed === loseRateFixed
-    )
-
-    let moreBalance = findItem?.balance < item.balance
-
-    if (findItem && moreBalance) {
-      acc[findIndex] = {
-        ...item,
-        winRateFixed,
-        loseRateFixed,
-      }
-    } else if (findIndex < 0) {
-      acc.push({
-        ...item,
-        winRateFixed,
-        loseRateFixed,
-      })
-    }
-
-    return acc
-  }, [])
   .sort((a, b) => b.balance - a.balance)
+  .slice(0, 20)
   .reverse()
 
 /** 데이터 출력 부분 */
@@ -158,6 +124,7 @@ function calculateWinProbability(
 
     const winTargetPrice =
       currentPrice * winRate /** 이 가격이되면 승리, 이득 */
+
     const loseTargetPrice =
       currentPrice * loseRate /** 이 가격이되면 패배 손해 */
 
@@ -186,7 +153,8 @@ function calculateWinProbability(
       balance = balance * 0.9995
       currentPrice = 0
       before = 'win'
-      weight = 0
+      weight = 4
+      lowCount = 0
     }
 
     if (lowBalance > balance) {
