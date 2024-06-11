@@ -6,6 +6,7 @@ import { loadCache, saveCache } from '../utils/cache'
 const { INVESTMENT_LIST } = ENV
 const MINUMUM_BUY_AMOUNT = 10050
 const TRADING_FEE = 0.0005
+const CHANGE_RATE = 0.0138
 
 async function buyCryto() {
   const myAccount: Balance[] = await getMyAccount()
@@ -59,6 +60,18 @@ async function buyCryto() {
         return
       }
 
+      const candle: Candle[] = await getLastDayCandle({
+        market: MARKET,
+        count: 2,
+      })
+
+      const [, lastDayCandle] = candle
+      const { change_rate: lastDayChangeRate } = lastDayCandle
+
+      if (lastDayChangeRate && lastDayChangeRate < CHANGE_RATE) {
+        return
+      }
+
       buy(MARKET, buyAmount - fee)
     }
   })
@@ -100,7 +113,7 @@ async function sellAll() {
     if (totalBalance >= MINUMUM_SELL_AMOUNT) {
       const candle: Candle[] = await getLastDayCandle({
         market: MARKET,
-        count: 2,
+        count: 1,
       })
 
       const [currentCandle] = candle

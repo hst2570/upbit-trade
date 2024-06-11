@@ -1,9 +1,9 @@
 /** RSI 계산 스크립트, 수익률이 좋은 경우를 찾기힘듦 */
 // const data = require('./data/up/KRW-SOL-day.json')
-// const data = require('./data/up/KRW-BTC-day.json')
+const data = require('./data/up/KRW-BTC-day.json')
 // const data = require('./data/up/KRW-BTC-min.json')
 // const data = require('./data/up/KRW-BORA-day.json')
-const data = require('./data/up/KRW-ETH-day.json')
+// const data = require('./data/up/KRW-ETH-day.json')
 const candles = [...data]
 
 function calculateRSI(prices, period = 14) {

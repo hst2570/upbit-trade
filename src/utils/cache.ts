@@ -6,6 +6,9 @@ export type CacheState = {
   beforeTradeState: 'win' | 'lose'
   weight: number
   loseCount: number
+  winRate?: number
+  loseRate?: number
+  currentPrice?: number
 }
 
 export const saveCache = (context: CacheState, key: string = '') => {

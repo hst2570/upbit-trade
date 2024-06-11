@@ -21,6 +21,7 @@ const time = `${now.getFullYear()}-${now.getMonth() + 1}-${
 
 const startDate = '2017-09-26'
 const market = 'KRW-BTC'
+// const market = 'KRW-ETH'
 // const startDate = '2021-10-15'
 // const market = 'KRW-SOL'
 // const startDate = '2020-08-05'
@@ -73,5 +74,10 @@ const getLastDate = () => {
     return a.candle_date_time_utc > b.candle_date_time_utc
   })
 
-  fs.writeFileSync(`${market}-day.json`, JSON.stringify(sortedList), 'utf8')
+  fs.writeFileSync(
+    `${__dirname}/data/up/${market}-day.json`,
+    JSON.stringify(sortedList),
+    'utf8'
+  )
 })()
+

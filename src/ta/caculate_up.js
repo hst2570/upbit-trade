@@ -1,14 +1,13 @@
 // const data = require('./data/up/KRW-BORA-day.json') /** 보라 데이터 */
-const data = require('./data/up/KRW-SOL-day.json') /** 솔라나 데이터 */
-// const data = require('./data/up/KRW-BTC-day.json') /** 비트코인 데이터 */
+// const data = require('./data/up/KRW-SOL-day.json') /** 솔라나 데이터 */
+const data = require('./data/up/KRW-BTC-day.json') /** 비트코인 데이터 */
 // const data = require('./data/up/KRW-ETH-day.json') /** 이더리움 데이터 */
 
 const candles = [...data]
-/** 특정 날짜로 필터링 하고 싶을때 아래 주석 코드 해제 
- .filter(({ candle_date_time_utc: date }) => {
-   return date > '2018-10-01'
- })
-*/
+/** 특정 날짜로 필터링 하고 싶을때 아래 주석 코드 해제 */
+// .filter(({ candle_date_time_utc: date }) => {
+//   return date > '2018-01-01'
+// })
 
 function addCommas(number) {
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -26,7 +25,7 @@ const winInfo = {
 }
 
 /** 초기 시작 금액 */
-const initBalance = 1_000_000
+const initBalance = 10_000_000
 /** 최대 수익률 */
 const MAX = 3
 
@@ -53,7 +52,7 @@ for (let i = 1.01; i < MAX; i = i + 0.01) {
 
 const sortedList = winList
   .sort((a, b) => b.balance - a.balance)
-  .slice(0, 20)
+  .slice(0, 110)
   .reverse()
 
 /** 데이터 출력 부분 */
@@ -65,7 +64,8 @@ sortedList.forEach(item => {
       3
     )} / prob: ${item.probability.toFixed(2)} wc: ${item.winCount} / lc: ${
       item.loseCount
-    } / bal: ${item.balance.toFixed(0)}`
+      // } / bal: ${item.balance.toFixed(0)}`
+    } / bal: ${addCommas(item.balance.toFixed(0))}`
 
     // / ratio: ${item.ratio.toFixed(
     //   2
@@ -78,11 +78,16 @@ winInfo.balance = addCommas(winInfo.balance.toFixed(0))
 console.log('winInfo: ', winInfo)
 
 function calculateWinProbability(
-  winRate /** 승리 시 이득 */,
-  loseRate = 1 /** 패배 시 손해 */,
-  weightValue = 1 /** 패배 시 lowCount 증가율 */,
-  investmentRatio = 1 /** 투자 비율 */,
-  leverage = 1 /** 레버리지 */
+  /** 승리 시 이득 */
+  winRate,
+  /** 패배 시 손해 */
+  loseRate = 1,
+  /** 패배 시 lowCount 증가율 */
+  weightValue = 1,
+  /** 투자 비율 */
+  investmentRatio = 1,
+  /** 레버리지 */
+  leverage = 1
 ) {
   /** 승리 카운터용 변수 */
   let win = 0
@@ -100,6 +105,7 @@ function calculateWinProbability(
   let before = ''
   /** 최저 잔고 확인용 */
   let lowBalance = 100000000000000
+  let beforeChange = 0
 
   candles.forEach(originCandle => {
     const {
@@ -107,12 +113,20 @@ function calculateWinProbability(
       trade_price: close,
       high_price: high,
       low_price: low,
+      change_rate,
     } = originCandle
 
     /** 패배가 연속으로 이어질 시 lowCount가 늘어나며 lowCount가 0이 될때까지 거래하지 않는다. */
     if (lowCount > 0) {
       lowCount--
       return
+    }
+
+    if (beforeChange < 0.0138) {
+      beforeChange = change_rate
+      return
+    } else {
+      beforeChange = change_rate
     }
 
     /** 오픈 가격에 샀음 */
@@ -122,11 +136,11 @@ function calculateWinProbability(
 
     lastPrice = close
 
-    const winTargetPrice =
-      currentPrice * winRate /** 이 가격이되면 승리, 이득 */
+    /** 이 가격이되면 승리, 이득 */
+    const winTargetPrice = currentPrice * winRate
 
-    const loseTargetPrice =
-      currentPrice * loseRate /** 이 가격이되면 패배 손해 */
+    /** 이 가격이되면 패배 손해 */
+    const loseTargetPrice = currentPrice * loseRate
 
     if (low <= loseTargetPrice) {
       lose++
@@ -207,4 +221,12 @@ function calculateWinProbability(
   lowCount = 0
   weight = 0
   before = ''
+}
+
+/**
+ * 피보나치 수열 함수
+ */
+function fibonacci(num) {
+  if (num <= 1) return 1
+  return fibonacci(num - 1) + fibonacci(num - 2)
 }

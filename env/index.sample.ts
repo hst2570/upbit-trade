@@ -3,10 +3,6 @@ export default {
   SECRET_KEY: '',
   TELEGRAM_BOT_TOKEN: '',
   TELEGRAM_CHAT_TOKEN: '',
-  MARKET: 'KRW-BTC',
-  CRYPTO_SYMBOL: 'BTC',
-  HIGH_TRIGGER_RATE: 1.14,
-  LOW_TRIGGER_RATE: 0.98,
   INVESTMENT_LIST: [
     {
       MARKET: 'KRW-BTC',
@@ -16,6 +12,7 @@ export default {
       HIGH_TRIGGER_RATE: 1.14,
       LOW_TRIGGER_RATE: 0.98,
       INVESTMENT_RATIO: 0.7,
+      START_TIME: '2017-09-26',
     },
     {
       MARKET: 'KRW-SOL',
@@ -25,6 +22,7 @@ export default {
       HIGH_TRIGGER_RATE: 1.14,
       LOW_TRIGGER_RATE: 0.98,
       INVESTMENT_RATIO: 0.3,
+      START_TIME: '2021-10-15',
     },
   ],
 }
