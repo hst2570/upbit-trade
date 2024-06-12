@@ -6,7 +6,7 @@ const data = require('./data/up/KRW-BTC-day.json') /** 비트코인 데이터 */
 const candles = [...data]
 /** 특정 날짜로 필터링 하고 싶을때 아래 주석 코드 해제 */
 // .filter(({ candle_date_time_utc: date }) => {
-//   return date > '2018-01-01'
+//   return date > '2021-10-15'
 // })
 
 function addCommas(number) {
@@ -25,7 +25,7 @@ const winInfo = {
 }
 
 /** 초기 시작 금액 */
-const initBalance = 10_000_000
+const initBalance = 1_000_000
 /** 최대 수익률 */
 const MAX = 3
 
@@ -36,19 +36,19 @@ let balance = initBalance
 /** 최대값 저장용 임시 변수 */
 let maxBalance = 0
 
-calculateWinProbability(2.06, 0.984) /** 특정 값을 넣어서 계산 가능 */
+calculateWinProbability(1.17, 0.949) /** 특정 값을 넣어서 계산 가능 */
 
-for (let i = 1.01; i < MAX; i = i + 0.01) {
-  for (let j = 0.999; j > 0; j = j - 0.001) {
-    try {
-      calculateWinProbability(i, j)
-    } catch (e) {
-      console.log(e)
-    }
-  }
-  console.clear()
-  console.info(`${((i * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
-}
+// for (let i = 1.01; i < MAX; i = i + 0.01) {
+//   for (let j = 0.999; j > 0; j = j - 0.001) {
+//     try {
+//       calculateWinProbability(i, j)
+//     } catch (e) {
+//       console.log(e)
+//     }
+//   }
+//   console.clear()
+//   console.info(`${((i * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
+// }
 
 const sortedList = winList
   .sort((a, b) => b.balance - a.balance)
@@ -76,6 +76,14 @@ sortedList.forEach(item => {
 /** 최대값 출력 부분 */
 winInfo.balance = addCommas(winInfo.balance.toFixed(0))
 console.log('winInfo: ', winInfo)
+console.log(
+  'avg',
+  addCommas(
+    (
+      winList.reduce((acc, cur) => acc + cur.balance, 0) / winList.length
+    ).toFixed(0)
+  )
+)
 
 function calculateWinProbability(
   /** 승리 시 이득 */
@@ -117,11 +125,12 @@ function calculateWinProbability(
     } = originCandle
 
     /** 패배가 연속으로 이어질 시 lowCount가 늘어나며 lowCount가 0이 될때까지 거래하지 않는다. */
-    if (lowCount > 0) {
-      lowCount--
-      return
-    }
+    // if (lowCount > 0) {
+    //   lowCount--
+    //   return
+    // }
 
+    /** 전날 변동성이 +1.38% 이하인 경우만 매수 */
     if (beforeChange < 0.0138) {
       beforeChange = change_rate
       return

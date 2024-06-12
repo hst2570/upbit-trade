@@ -1,7 +1,6 @@
 import { getLastDayCandle, getMyAccount, buy, sell } from '../api'
 import { Candle, Balance } from '../types/@api'
 import ENV from '../../env'
-import { loadCache, saveCache } from '../utils/cache'
 
 const { INVESTMENT_LIST } = ENV
 const MINUMUM_BUY_AMOUNT = 10050
@@ -37,29 +36,12 @@ async function buyCryto() {
     const disableRatio = Number(
       (1 - disabledRatioList.reduce((acc, cur) => acc + cur, 0)).toFixed(1)
     )
-    const {
-      beforeTradeState = '',
-      weight = 0,
-      loseCount = 0,
-    } = loadCache(MARKET)
     const myBalance = Number(Number(balance).toFixed(0))
     const ratio = Number((INVESTMENT_RATIO / disableRatio).toFixed(2))
     const buyAmount = myBalance * ratio
     const fee = buyAmount * TRADING_FEE
 
     if (buyAmount > MINUMUM_BUY_AMOUNT) {
-      if (loseCount > 0) {
-        saveCache(
-          {
-            beforeTradeState,
-            weight,
-            loseCount: loseCount - 1,
-          },
-          MARKET
-        )
-        return
-      }
-
       const candle: Candle[] = await getLastDayCandle({
         market: MARKET,
         count: 2,
@@ -89,7 +71,6 @@ async function sellAll() {
       MINUMUM_SELL_AMOUNT,
       MIMUMUM_TRANSACTION_UNIT,
     } = investment
-    const { weight = 0 } = loadCache(MARKET)
     const { balance: totalBalance, avg_buy_price: avgBuyPrice } =
       myAccount.find(({ currency }: Balance) => currency === CRYPTO_SYMBOL) ||
       {}
@@ -126,32 +107,13 @@ async function sellAll() {
           price: high,
           orderType: 'limit',
         })
-
-        saveCache(
-          {
-            beforeTradeState: 'win',
-            weight: 0,
-            loseCount: 0,
-          },
-          MARKET
-        )
       } else if (row >= currentPrice) {
-        const nextWeight = weight + 1
         sell({
           market: MARKET,
           volume: totalBalance,
           price: row,
           orderType: 'limit',
         })
-
-        saveCache(
-          {
-            beforeTradeState: 'lose',
-            weight: nextWeight,
-            loseCount: nextWeight,
-          },
-          MARKET
-        )
       }
     }
   })
