@@ -42,12 +42,10 @@ async function buyCryto() {
     const fee = buyAmount * TRADING_FEE
 
     if (buyAmount > MINUMUM_BUY_AMOUNT) {
-      const candle: Candle[] = await getLastDayCandle({
+      const [, lastDayCandle]: Candle[] = await getLastDayCandle({
         market: MARKET,
         count: 2,
       })
-
-      const [, lastDayCandle] = candle
       const { change_rate: lastDayChangeRate } = lastDayCandle
 
       if (lastDayChangeRate && lastDayChangeRate < CHANGE_RATE) {
@@ -92,12 +90,10 @@ async function sellAll() {
     )
 
     if (totalBalance >= MINUMUM_SELL_AMOUNT) {
-      const candle: Candle[] = await getLastDayCandle({
+      const [currentCandle]: Candle[] = await getLastDayCandle({
         market: MARKET,
         count: 1,
       })
-
-      const [currentCandle] = candle
       const { trade_price: currentPrice } = currentCandle
 
       if (high <= currentPrice) {

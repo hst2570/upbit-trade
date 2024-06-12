@@ -36,19 +36,19 @@ let balance = initBalance
 /** 최대값 저장용 임시 변수 */
 let maxBalance = 0
 
-calculateWinProbability(1.17, 0.949) /** 특정 값을 넣어서 계산 가능 */
+// calculateWinProbability(1.17, 0.949) /** 특정 값을 넣어서 계산 가능 */
 
-// for (let i = 1.01; i < MAX; i = i + 0.01) {
-//   for (let j = 0.999; j > 0; j = j - 0.001) {
-//     try {
-//       calculateWinProbability(i, j)
-//     } catch (e) {
-//       console.log(e)
-//     }
-//   }
-//   console.clear()
-//   console.info(`${((i * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
-// }
+for (let i = 1.01; i < MAX; i = i + 0.01) {
+  for (let j = 0.999; j > 0; j = j - 0.001) {
+    try {
+      calculateWinProbability(i, j)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+  console.clear()
+  console.info(`${((i * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
+}
 
 const sortedList = winList
   .sort((a, b) => b.balance - a.balance)
