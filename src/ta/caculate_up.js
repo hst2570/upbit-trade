@@ -159,12 +159,6 @@ function calculateWinProbability(
         balance * investmentRatio * leverage * (1 - loseRate.toFixed(4))
       balance = balance * 0.9995
       currentPrice = 0
-
-      if (before === 'lose') {
-        weight = weight + weightValue
-        lowCount = weight
-      }
-      before = 'lose' /** 이전 상태 계산용 변수 */
     } else if (high >= winTargetPrice) {
       win++
 
@@ -175,8 +169,6 @@ function calculateWinProbability(
 
       balance = balance * 0.9995
       currentPrice = 0
-      before = 'win'
-      weight = 0
     }
 
     if (lowBalance > balance) {
@@ -184,7 +176,7 @@ function calculateWinProbability(
     }
 
     if (balance < 0) {
-      throw new Error()
+      // throw new Error()
     }
   })
 

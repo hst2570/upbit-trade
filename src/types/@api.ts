@@ -5,6 +5,7 @@ export type Candle = {
   low_price: number
   change_price?: number
   change_rate?: number
+  candle_date_time_kst: string
 }
 
 export type Balance = {
