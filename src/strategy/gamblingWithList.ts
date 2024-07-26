@@ -58,7 +58,7 @@ async function buyCryto() {
 
       const { change_rate: lastDayChangeRate } = lastDayCandle
 
-      if (lastDayChangeRate && lastDayChangeRate < CHANGE_RATE) {
+      if (lastDayChangeRate && lastDayChangeRate <= CHANGE_RATE) {
         return
       }
 
@@ -79,6 +79,7 @@ async function sellAll() {
       MINUMUM_SELL_AMOUNT,
       MIMUMUM_TRANSACTION_UNIT,
     } = investment
+
     const { balance: totalBalance, avg_buy_price: avgBuyPrice } =
       myAccount.find(({ currency }: Balance) => currency === CRYPTO_SYMBOL) ||
       {}
