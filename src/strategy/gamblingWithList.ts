@@ -51,9 +51,10 @@ async function buyCryto() {
         candleList.find(item => {
           const { candle_date_time_kst } = item
           const candleDate = new Date(candle_date_time_kst)?.getDate()
-          const currentDate = new Date()?.getDate()
+          const lastDateTime = new Date()?.getTime() - 24 * 60 * 60 * 1000
+          const lastDate = new Date(lastDateTime)?.getDate()
 
-          return candleDate === currentDate
+          return candleDate === lastDate
         }) || ({} as Candle)
 
       const { change_rate: lastDayChangeRate } = lastDayCandle
