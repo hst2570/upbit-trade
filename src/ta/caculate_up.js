@@ -1,6 +1,6 @@
 // const data = require('./data/up/KRW-BORA-day.json') /** 보라 데이터 */
-const data = require('./data/up/KRW-SOL-day.json') /** 솔라나 데이터 */
-// const data = require('./data/up/KRW-BTC-day.json') /** 비트코인 데이터 */
+// const data = require('./data/up/KRW-SOL-day.json') /** 솔라나 데이터 */
+const data = require('./data/up/KRW-BTC-day.json') /** 비트코인 데이터 */
 // const data = require('./data/up/KRW-ETH-day.json') /** 이더리움 데이터 */
 
 const candles = [...data]

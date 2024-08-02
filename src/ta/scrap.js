@@ -73,5 +73,9 @@ const getLastDate = () => {
     return a.candle_date_time_utc > b.candle_date_time_utc
   })
 
-  fs.writeFileSync(`${market}-day.json`, JSON.stringify(sortedList), 'utf8')
+  fs.writeFileSync(
+    `${__dirname}/data/up/${market}-day.json`,
+    JSON.stringify(sortedList),
+    'utf8'
+  )
 })()

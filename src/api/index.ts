@@ -38,7 +38,7 @@ export const getLastDayCandle = ({
   market: string
   count: number
 }) => {
-  let query: any = {}
+  const query: any = {}
 
   if (market) {
     query['market'] = market
@@ -61,7 +61,7 @@ export const getLastDayCandle = ({
 }
 
 export const getMyAccount = () => {
-  let url = `https://api.upbit.com/v1/accounts`
+  const url = `https://api.upbit.com/v1/accounts`
 
   return requestAuth(url, 'GET')
     .then((res: AxiosResponse) => {
@@ -74,7 +74,7 @@ export const getMyAccount = () => {
 }
 
 export const buy = (market: string, price: number) => {
-  let url = `https://api.upbit.com/v1/orders`
+  const url = `https://api.upbit.com/v1/orders`
   const priceKRW = Number(price).toFixed(0)
 
   return requestAuthWtihBody(url, 'POST', {
@@ -110,7 +110,7 @@ export const sell = ({
   price?: number
   orderType: string
 }) => {
-  let url = `https://api.upbit.com/v1/orders`
+  const url = `https://api.upbit.com/v1/orders`
 
   return requestAuthWtihParams(url, 'POST', {
     market,
