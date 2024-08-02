@@ -102,11 +102,16 @@ async function sellAll() {
     )
 
     if (totalBalance >= MINUMUM_SELL_AMOUNT) {
-      const [currentCandle]: Candle[] = await getLastDayCandle({
+      const [currentCandle, lastDayCandle]: Candle[] = await getLastDayCandle({
         market: MARKET,
-        count: 1,
+        count: 2,
       })
+      const { change_rate: lastDayChangeRate } = lastDayCandle
       const { trade_price: currentPrice } = currentCandle
+
+      if (lastDayChangeRate && lastDayChangeRate <= CHANGE_RATE) {
+        return
+      }
 
       if (high <= currentPrice) {
         sell({

@@ -136,7 +136,7 @@ function calculateWinProbability({
       change_rate,
     } = originCandle
 
-    /** 전날 상승률이 +1.38% 이하인 경우만 매수 */
+    /** 전날 상승률이 +1.38% 이상인 경우만 매수 */
     if (beforeChange <= 0.0138) {
       beforeChange = change_rate
       return
