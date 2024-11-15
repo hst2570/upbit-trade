@@ -3,16 +3,13 @@
 import data from './data/up/KRW-BTC-day.json' /** 비트코인 데이터 */
 // const data = require('./data/up/KRW-ETH-day.json') /** 이더리움 데이터 */
 
+const targetLength = data.length / 2
+
 const allCandles = [...data].map((candle, i) => {
   return { ...candle, month: new Date(candle.candle_date_time_utc).getMonth() }
 })
-
-const candles = [...allCandles].filter(({ candle_date_time_utc: date }) => {
-  return date > '2011-10-01'
-})
-/** 특정 날짜로 필터링 하고 싶을때 아래 주석 코드 해제 
- 
-*/
+const halfCandles = [...allCandles].slice(0, targetLength)
+const elseCandles = [...allCandles].slice(targetLength, data.length)
 
 const addCommas = number =>
   number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -39,9 +36,10 @@ const calculateWinProbability = ({
   weightValue = 1 /** 패배 시 lowCount 증가율 */,
   investmentRatio = 1 /** 투자 비율 */,
   leverage = 1 /** 레버리지 */,
-  mvag,
   maxWeight = 15,
-  rsis,
+  candles,
+  rank = null,
+  originMax = null,
 }) => {
   /** 승리 카운터용 변수 */
   let win = 0
@@ -67,6 +65,8 @@ const calculateWinProbability = ({
       opening_price: open,
       high_price: high,
       low_price: low,
+      trade_price: close,
+      month,
     } = candles[index]
 
     /** 패배가 연속으로 이어질 시 lowCount가 늘어나며 lowCount가 0이 될때까지 거래하지 않는다. */
@@ -172,13 +172,14 @@ const calculateWinProbability = ({
     leverage: leverage,
     weightValue,
     maxWeight,
+    rank: rank ? rank : null,
+    originMax: originMax ? originMax : null,
   })
 
   balance = initBalance
   lowCount = 0
   weight = 0
   before = ''
-  winList = winList.sort((a, b) => b.balance - a.balance).slice(0, 100)
 }
 
 /** 초기 시작 금액 */
@@ -187,15 +188,6 @@ const initBalance = 1_000_000
 const MAX = 3
 const winGrowthRate = 0.01
 const loseGrowthRate = 0.001
-
-// calculateWinProbability({
-//   winRate: 2.06,
-//   loseRate: 0.982,
-//   // weightValue,
-//   // maxWeight,
-//   mvag,
-//   rsis,
-// })
 
 for (
   let winRate = 1 + winGrowthRate;
@@ -211,6 +203,7 @@ for (
       calculateWinProbability({
         winRate,
         loseRate,
+        candles: halfCandles,
       })
     } catch (e) {
       // console.log(e)
@@ -220,16 +213,41 @@ for (
   console.info(`${((winRate * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
 }
 
+winList = winList
+  .sort((a, b) => b.balance - a.balance)
+  .map((item, i) => {
+    return { ...item, rank: i + 1 }
+  })
+
+const candidate = [...winList]
+winList = []
+
+candidate.forEach(({ winRate, loseRate, rank, balance }) => {
+  calculateWinProbability({
+    winRate,
+    loseRate,
+    candles: elseCandles,
+    // candles: allCandles,
+    rank,
+    originMax: balance,
+  })
+})
+
+const ttt = 500
+
 const avg =
   winList
+    .filter(({ balance }) => balance > initBalance)
     .sort((a, b) => b.balance - a.balance)
-    .slice(0, 100)
-    .reduce((acc, { balance }) => acc + balance, 0) / 100
+    .slice(0, ttt)
+    .reduce((acc, { balance }) => acc + balance, 0) / ttt
+// winList.filter(({ balance }) => balance > initBalance).length
 
 const sortedList = winList
-  .sort((a, b) => b.balance - a.balance)
-  // .filter(({ wc }) => wc > 10)
-  .slice(0, 20)
+  // .sort((a, b) => b.balance - a.balance)
+  .sort((a, b) => a.rank - b.rank)
+  .filter(({ balance }) => balance > avg)
+  .slice(0, ttt)
   .reverse()
 
 /** 데이터 출력 부분 */
@@ -241,8 +259,10 @@ sortedList.forEach(item => {
       3
     )} / prob: ${item.probability.toFixed(2)} wc: ${item.winCount} / lc: ${
       item.loseCount
-    } / bal: ${addCommas(item.balance.toFixed(0))} / 
-    weightValue: ${item.weightValue} / maxWeight: ${item.maxWeight}`
+    } / bal: ${addCommas(item.balance.toFixed(0))} 
+    weightValue: ${item.weightValue} / maxWeight: ${item.maxWeight} 
+    rank: ${item.rank} \ ratio: ${item.ratio.toFixed(2)} /
+    originMax: ${addCommas(item.originMax.toFixed(0))}`
 
     // / ratio: ${item.ratio.toFixed(
     //   2
@@ -253,4 +273,4 @@ sortedList.forEach(item => {
 console.log(addCommas(avg.toFixed(0)))
 /** 최대값 출력 부분 */
 // winInfo.balance = addCommas(winInfo.balance.toFixed(0))
-console.log('winInfo: ', winInfo)
+// console.log('winInfo: ', winInfo)

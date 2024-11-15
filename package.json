@@ -1,7 +1,7 @@
 {
   "name": "upbit-trade",
-  "version": "2.0.0",
-  "description": "업비트 트레이딩 스크립트",
+  "version": "3.0.0",
+  "description": "trading system",
   "scripts": {
     "start": "bun run cron",
     "cron": "bun run batch/cron.ts&",
@@ -9,13 +9,14 @@
   },
   "author": "",
   "dependencies": {
-    "axios": "^0.27.2",
-    "jsonwebtoken": "^8.5.1",
-    "node-cron": "^3.0.2",
-    "uuid": "^8.3.2"
+    "axios": "^1.7.3",
+    "jsonwebtoken": "^9.0.2",
+    "node-cron": "^3.0.3",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^8.5.8",
-    "@types/uuid": "^8.3.4"
+    "@types/bun": "^1.1.6",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/uuid": "^10.0.0"
   }
 }

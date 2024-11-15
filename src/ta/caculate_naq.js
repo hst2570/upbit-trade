@@ -14,6 +14,60 @@ function addCommas(number) {
   return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
+const movingAverage = (candles, cc = 17) => {
+  const MA = [].fill(0, 0, candles.length)
+
+  for (let i = 0; i < candles.length - cc; i++) {
+    let sum = candles.slice(i, i + cc).reduce((acc, ca) => {
+      const trade_price = ca[1]
+      acc + trade_price
+    }, 0)
+
+    MA[i + cc] = sum / cc
+  }
+
+  return MA
+}
+
+const RSI = (candles, cc = 120) => {
+  const U = []
+  const D = []
+  const R = [].fill(0, 0, candles.length)
+
+  for (let i = 0; i < candles.length; i++) {
+    const [, open, high, low, close] = candles[i]
+    const prevClose = open
+
+    if (i === 0) {
+      U.push(0)
+      D.push(0)
+      continue
+    }
+
+    const changed = close - prevClose
+
+    if (changed > 0) {
+      U.push(close - prevClose)
+      D.push(0)
+    } else {
+      U.push(0)
+      D.push(prevClose - close)
+    }
+  }
+
+  for (let i = 0; i < U.length - cc; i++) {
+    let sumU = U.slice(i, i + cc).reduce((acc, cur) => acc + cur, 0) / cc
+    let sumD = D.slice(i, i + cc).reduce((acc, cur) => acc + cur, 0) / cc
+
+    R[i + cc] = (sumU / (sumU + sumD)) * 100
+  }
+
+  return R
+}
+
+const mvag = movingAverage(candles)
+const rsis = RSI(candles)
+
 const winInfo = {
   winRate: 1,
   loseRate: 1,
@@ -24,7 +78,7 @@ const winInfo = {
   ratio: 0,
 }
 
-const initBalance = 1
+const initBalance = 1_000_000
 const MAX = 3
 
 let winList = []
@@ -33,7 +87,7 @@ let maxBalance = 0
 
 // calculateWinProbability(2.096, 0.996)
 
-for (let i = 1.001; i < MAX; i = i + 0.001) {
+for (let i = 1.01; i < MAX; i = i + 0.01) {
   for (let j = 0.999; j > 0; j = j - 0.001) {
     // for (let w = 0; w < 90; w = w + 1) {
     /* */
@@ -147,6 +201,7 @@ function calculateWinProbability(
 
     if (currentPrice === 0) {
       currentPrice = open
+      balance = balance * (1 - 0.0005)
     }
 
     lastPrice = close
