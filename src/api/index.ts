@@ -27,7 +27,7 @@ export const getLastCandle = (unit: number, market: string, count: number) => {
       return res.data
     })
     .catch(e => {
-      console.log(e.message)
+      console.log(`[ERROR] - getLastCandle: e.message`)
     })
 }
 
@@ -56,7 +56,7 @@ export const getLastDayCandle = ({
       return res.data
     })
     .catch(e => {
-      console.log(e.message)
+      console.log(`[ERROR] - getLastDayCandle: ${e.message}`)
     })
 }
 
@@ -69,7 +69,7 @@ export const getMyAccount = () => {
       return data
     })
     .catch(e => {
-      console.log(e.message)
+      console.log(`[ERROR - getMyAccount] ${e.message}`)
     })
 }
 

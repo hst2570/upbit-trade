@@ -13,12 +13,22 @@ cron.schedule('0 9 * * *', () => {
   }
 })
 
+const loggingDebounceTime = 600000
+let time = 0
+
 // running a task every 1 seconds
 cron.schedule('*/1 * * * * *', () => {
   try {
     gambling.sell()
   } catch (error) {
-    console.log('sell - error', error.message)
-    sendNotification(`[ERROR-SELL]\n ${error.message}`)
+    if (time <= 0) {
+      time = loggingDebounceTime
+      console.log('sell - error', error.message)
+      sendNotification(`[ERROR-SELL]\n ${error.message}`)
+    }
+  } finally {
+    if (time > 0) {
+      time -= 1000
+    }
   }
 })

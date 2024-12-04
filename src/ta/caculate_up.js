@@ -188,37 +188,33 @@ const MAX = 3
 const winGrowthRate = 0.01
 const loseGrowthRate = 0.001
 
-// calculateWinProbability({
-//   winRate: 2.06,
-//   loseRate: 0.982,
-//   // weightValue,
-//   // maxWeight,
-//   mvag,
-//   rsis,
-// })
+calculateWinProbability({
+  winRate: 2.06,
+  loseRate: 0.982,
+})
 
-for (
-  let winRate = 1 + winGrowthRate;
-  winRate < MAX;
-  winRate = winRate + winGrowthRate
-) {
-  for (
-    let loseRate = 1 - loseGrowthRate;
-    loseRate > 0.5;
-    loseRate = loseRate - loseGrowthRate
-  ) {
-    try {
-      calculateWinProbability({
-        winRate,
-        loseRate,
-      })
-    } catch (e) {
-      // console.log(e)
-    }
-  }
-  console.clear()
-  console.info(`${((winRate * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
-}
+// for (
+//   let winRate = 1 + winGrowthRate;
+//   winRate < MAX;
+//   winRate = winRate + winGrowthRate
+// ) {
+//   for (
+//     let loseRate = 1 - loseGrowthRate;
+//     loseRate > 0.5;
+//     loseRate = loseRate - loseGrowthRate
+//   ) {
+//     try {
+//       calculateWinProbability({
+//         winRate,
+//         loseRate,
+//       })
+//     } catch (e) {
+//       // console.log(e)
+//     }
+//   }
+//   console.clear()
+//   console.info(`${((winRate * 100 - 100) / (MAX - 1)).toFixed(1)}%`)
+// }
 
 const avg =
   winList
