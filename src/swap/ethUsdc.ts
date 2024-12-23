@@ -23,9 +23,6 @@ const { SWAP } = ENV
 const MaxUint128 = BigInt('0xffffffffffffffffffffffffffffffff')
 const privateKey = SWAP.PRIVATE_KEY || ''
 const rpcUrl = SWAP.RPC
-const provider = new JsonRpcProvider(rpcUrl)
-const wallet = new Wallet(privateKey, provider)
-const walletAddress = wallet.address
 
 const token0 = new Token(
   ARBITRUM_CHAIN_ID,
@@ -36,8 +33,12 @@ const token0 = new Token(
 )
 const token1 = new Token(ARBITRUM_CHAIN_ID, USDC_ADDRESS, 6, 'USDC', 'USD Coin')
 
-const run = async () => {
+export const run = async () => {
   // NonfungiblePositionManager 컨트랙트 인스턴스
+  const provider = new JsonRpcProvider(rpcUrl)
+  const wallet = new Wallet(privateKey, provider)
+  const walletAddress = wallet.address
+
   const positionManager = new ethers.Contract(
     NONFUNGIBLE_POSITION_MANAGER_ADDRESS,
     NONFUNGIBLE_POSITION_MANAGER_ABI,
@@ -46,9 +47,10 @@ const run = async () => {
 
   const poolContract = new ethers.Contract(POOL_ADDRESS, POOL_ABI, provider)
 
-  const { tokenId, position: currentPosition } = (await getPools(
-    positionManager
-  )) as {
+  const { tokenId, position: currentPosition } = (await getPools({
+    positionManager,
+    walletAddress,
+  })) as {
     tokenId: string
     position: Position
   }
@@ -98,17 +100,23 @@ const run = async () => {
       tokenId,
       position,
       positionManager,
+      walletAddress,
+      wallet,
     })
 
     await swap({
       isUpper,
+      wallet,
+      provider,
+      walletAddress,
     })
 
     // // 내 지갑에서 조회
     const { amount0, amount1 } = await setupAmounts(
       provider,
       WETH_ADDRESS,
-      USDC_ADDRESS
+      USDC_ADDRESS,
+      walletAddress
     )
 
     await createArbitrumPosition({
@@ -117,6 +125,7 @@ const run = async () => {
       tickLower: newTickLower,
       tickUpper: newTickUpper,
       positionManager,
+      walletAddress,
     })
   }
 }
@@ -131,7 +140,13 @@ const currentTick = async (poolContract: { slot0: () => any }) => {
   }
 }
 
-const getPools = async (positionManager: any) => {
+const getPools = async ({
+  positionManager,
+  walletAddress,
+}: {
+  positionManager: ethers.Contract
+  walletAddress: string
+}) => {
   try {
     // 사용자가 소유한 NFT 개수
     const balance = await positionManager.balanceOf(walletAddress)
@@ -158,10 +173,14 @@ async function closePosition({
   tokenId,
   position,
   positionManager,
+  walletAddress,
+  wallet,
 }: {
   tokenId: string
   position: Position
   positionManager: ethers.Contract
+  walletAddress: string
+  wallet: Wallet
 }) {
   try {
     const [fee0, fee1] = await positionManager.collect.staticCall({
@@ -213,7 +232,17 @@ async function closePosition({
   }
 }
 
-async function swap({ isUpper = false }: { isUpper: boolean }) {
+async function swap({
+  isUpper = false,
+  wallet,
+  provider,
+  walletAddress,
+}: {
+  isUpper: boolean
+  wallet: Wallet
+  provider: JsonRpcProvider
+  walletAddress: string
+}) {
   try {
     const swapRouter = new ethers.Contract(
       SWAP_ROUTER_ADDRESS,
@@ -270,12 +299,14 @@ async function createArbitrumPosition({
   tickLower,
   tickUpper,
   positionManager,
+  walletAddress,
 }: {
   amount0: bigint
   amount1: bigint
   tickLower: number
   tickUpper: number
   positionManager: ethers.Contract
+  walletAddress: string
 }) {
   try {
     const deadline = Math.floor(Date.now() / 1000) + 60 * 10 // 10분 내 실행 제한
@@ -316,7 +347,8 @@ async function getERC20Balance(
 async function setupAmounts(
   provider: JsonRpcProvider,
   token0Address: string,
-  token1Address: string
+  token1Address: string,
+  walletAddress: string
 ): Promise<{ amount0: bigint; amount1: bigint }> {
   // 잔액 조회
   const amount0: bigint = await getERC20Balance(
