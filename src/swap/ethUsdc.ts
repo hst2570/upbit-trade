@@ -16,6 +16,7 @@ import {
   WETH_ADDRESS,
 } from './constants/contract'
 import ENV from '../../env'
+import { sendNotification } from '../notification'
 
 const { SWAP } = ENV
 
@@ -295,9 +296,9 @@ async function createArbitrumPosition({
     }
 
     const tx = await positionManager.mint(params)
-    console.log('포지션 생성 완료:', tx)
+    sendNotification(`[새로운 포지션 생성 완료] ETH/USDC`)
   } catch (error) {
-    console.error('포지션 생성 중 오류 발생:', error)
+    sendNotification(`[!새로운 포지션 생성 실패...] ETH/USDC`)
   }
 }
 
