@@ -7,6 +7,10 @@ export default {
   CRYPTO_SYMBOL: 'BTC',
   HIGH_TRIGGER_RATE: 1.14,
   LOW_TRIGGER_RATE: 0.98,
+  SWAP: {
+    RPC:'',
+    PRIVATE_KEY:''
+  },
   INVESTMENT_LIST: [
     {
       MARKET: 'KRW-BTC',

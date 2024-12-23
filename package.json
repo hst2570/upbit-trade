@@ -9,10 +9,15 @@
   },
   "author": "",
   "dependencies": {
+    "@uniswap/sdk-core": "^6.1.1",
+    "@uniswap/v3-sdk": "^3.19.0",
     "axios": "^1.7.3",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^3.0.3",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.4",
+    "jsbi": "^3.1.4"
   },
   "devDependencies": {
     "@types/bun": "^1.1.6",

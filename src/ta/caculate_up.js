@@ -10,8 +10,8 @@ const allCandles = [...data].map((candle, i) => {
 const candles = [...allCandles].filter(({ candle_date_time_utc: date }) => {
   return date > '2011-10-01'
 })
-/** 특정 날짜로 필터링 하고 싶을때 아래 주석 코드 해제 
- 
+/** 특정 날짜로 필터링 하고 싶을때 아래 주석 코드 해제
+
 */
 
 const addCommas = number =>
