@@ -38,8 +38,8 @@ cron.schedule('*/1 * * * * *', async () => {
   }
 })
 
-/** 10분마다 실행, uniswap */
-cron.schedule('*/10 * * * *', () => {
+/** 5분마다 실행, uniswap */
+cron.schedule('*/5 * * * *', () => {
   run()
 })
 
