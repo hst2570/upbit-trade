@@ -19,10 +19,11 @@ import ENV from '../../env'
 import { sendNotification } from '../notification'
 
 const { SWAP } = ENV
+const { PRIVATE_KEY, RPC, MIN, MAX } = SWAP
 
 const MaxUint128 = BigInt('0xffffffffffffffffffffffffffffffff')
-const privateKey = SWAP.PRIVATE_KEY || ''
-const rpcUrl = SWAP.RPC
+const privateKey = PRIVATE_KEY || ''
+const rpcUrl = RPC
 
 const token0 = new Token(
   ARBITRUM_CHAIN_ID,
@@ -34,7 +35,6 @@ const token0 = new Token(
 const token1 = new Token(ARBITRUM_CHAIN_ID, USDC_ADDRESS, 6, 'USDC', 'USD Coin')
 
 export const run = async () => {
-  // NonfungiblePositionManager 컨트랙트 인스턴스
   try {
     const provider = new JsonRpcProvider(rpcUrl)
     const wallet = new Wallet(privateKey, provider)
@@ -66,11 +66,11 @@ export const run = async () => {
     const currentToken0Price = Math.pow(1.0001, tick) * 1e12
 
     const newTickLower = Math.floor(
-      Math.log((currentToken0Price / 1e12) * 0.985) / Math.log(1.0001)
+      Math.log((currentToken0Price / 1e12) * MIN) / Math.log(1.0001)
     )
 
     const newTickUpper = Math.floor(
-      Math.log((currentToken0Price / 1e12) * 1.015) / Math.log(1.0001)
+      Math.log((currentToken0Price / 1e12) * MAX) / Math.log(1.0001)
     )
 
     const pool = new Pool(
@@ -112,7 +112,6 @@ export const run = async () => {
         walletAddress,
       })
 
-      // // 내 지갑에서 조회
       const { amount0, amount1 } = await setupAmounts(
         provider,
         WETH_ADDRESS,
@@ -134,7 +133,6 @@ export const run = async () => {
   }
 }
 
-// positionManager을 사용해서 현재 tick 정보 가져오기
 const currentTick = async (poolContract: { slot0: () => any }) => {
   try {
     const slot0 = await poolContract.slot0()
@@ -360,5 +358,3 @@ async function setupAmounts(
 
   return { amount0, amount1 }
 }
-
-run()

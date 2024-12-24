@@ -1,3 +1,5 @@
+import { MAX } from 'uuid'
+
 export default {
   ACCESS_KEY: '',
   SECRET_KEY: '',
@@ -8,8 +10,10 @@ export default {
   HIGH_TRIGGER_RATE: 1.14,
   LOW_TRIGGER_RATE: 0.98,
   SWAP: {
-    RPC:'',
-    PRIVATE_KEY:''
+    RPC: '',
+    PRIVATE_KEY: '',
+    MIN: 0.985,
+    MAX: 1.015,
   },
   INVESTMENT_LIST: [
     {
