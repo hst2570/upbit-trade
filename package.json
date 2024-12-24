@@ -3,7 +3,7 @@
   "version": "3.0.0",
   "description": "trading system",
   "scripts": {
-    "start": "bun run cron & bun run cronSwap & bun run cronHealth",
+    "start": "bun run cron",
     "cron": "bun run batch/cron.ts&",
     "cronSwap": "bun run batch/cronDeFi.ts&",
     "cronHealth": "bun run batch/cronHealth.ts&",
