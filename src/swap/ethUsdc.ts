@@ -227,7 +227,7 @@ async function closePosition({
 
     const gasEstimate = await wallet.estimateGas(params)
 
-    const gasLimit = Number(gasEstimate) * 1.2
+    const gasLimit = Number(gasEstimate) * 1.5
 
     const tx = await wallet.sendTransaction({
       ...params,
@@ -236,6 +236,7 @@ async function closePosition({
     await tx.wait()
   } catch (error) {
     sendNotification(`[!포지션 종료 실패...] ETH/USDC`)
+    throw new Error()
   }
 }
 
