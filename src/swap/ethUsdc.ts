@@ -268,7 +268,11 @@ async function swap({
     await approveTx.wait()
 
     const deadline = Math.floor(Date.now() / 1000) + 60 * 10 // 10분 내 실행 제한
-    const amountOutMinimum = ethers.parseUnits('1', isUpper ? 6 : 18) // 최소 1 USDC (슬리피지 방지)
+    const amountOutMinimum = ethers.parseUnits(
+      isUpper ? '1' : '0.0001',
+      isUpper ? 6 : 18
+    ) // 최소 슬리피지 방지
+
     const params = {
       tokenIn: targetCotractAddress,
       tokenOut: elseContractAddress,
