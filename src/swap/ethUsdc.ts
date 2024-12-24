@@ -203,24 +203,35 @@ async function closePosition({
       fee1.toString()
     )
 
-    const params = NonfungiblePositionManager.removeCallParameters(position, {
-      tokenId: tokenId.toString(),
-      liquidityPercentage,
-      slippageTolerance,
-      deadline: Math.floor(Date.now() / 1000) + 60 * 10,
-      collectOptions: {
-        expectedCurrencyOwed0,
-        expectedCurrencyOwed1,
-        recipient: walletAddress,
-      },
-    })
+    const { calldata, value } = NonfungiblePositionManager.removeCallParameters(
+      position,
+      {
+        tokenId: tokenId.toString(),
+        liquidityPercentage,
+        slippageTolerance,
+        deadline: Math.floor(Date.now() / 1000) + 60 * 10,
+        collectOptions: {
+          expectedCurrencyOwed0,
+          expectedCurrencyOwed1,
+          recipient: walletAddress,
+        },
+      }
+    )
 
-    const tx = await wallet.sendTransaction({
+    const params = {
       to: NONFUNGIBLE_POSITION_MANAGER_ADDRESS,
       from: walletAddress,
-      data: params.calldata,
-      value: params.value,
-      gasLimit: 600000,
+      data: calldata,
+      value,
+    }
+
+    const gasEstimate = await wallet.estimateGas(params)
+
+    const gasLimit = Number(gasEstimate) * 1.2
+
+    const tx = await wallet.sendTransaction({
+      ...params,
+      gasLimit,
     })
     await tx.wait()
   } catch (error) {
@@ -254,7 +265,7 @@ async function swap({
       provider
     )
     const balance = await wethContract.balanceOf(walletAddress)
-    const halfWeth = balance / 2n
+    const halfAmount = balance / 2n
 
     const approveAbi = [
       'function approve(address spender, uint256 amount) returns (bool)',
@@ -264,7 +275,7 @@ async function swap({
       approveAbi,
       wallet
     )
-    const approveTx = await targetToken.approve(SWAP_ROUTER_ADDRESS, halfWeth)
+    const approveTx = await targetToken.approve(SWAP_ROUTER_ADDRESS, halfAmount)
     await approveTx.wait()
 
     const deadline = Math.floor(Date.now() / 1000) + 60 * 10 // 10분 내 실행 제한
@@ -279,7 +290,7 @@ async function swap({
       fee: 500, // 수수료 티어 0.05%
       recipient: walletAddress,
       deadline,
-      amountIn: halfWeth, // 스왑할 WETH 양
+      amountIn: halfAmount,
       amountOutMinimum,
       sqrtPriceLimitX96: 0, // 가격 제한 없음
     }
