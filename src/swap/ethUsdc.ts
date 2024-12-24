@@ -94,7 +94,7 @@ export const run = async () => {
     const isOutOfRange = isLower || isUpper
 
     if (!isOutOfRange) {
-      sendNotification(`[현재 틱 범위 내...] ETH/USDC`)
+      // sendNotification(`[현재 틱 범위 내...] ETH/USDC`)
       return
     } else {
       await closePosition({
