@@ -231,7 +231,7 @@ async function closePosition({
 
     const tx = await wallet.sendTransaction({
       ...params,
-      gasLimit,
+      gasLimit: gasLimit.toFixed(0),
     })
     await tx.wait()
   } catch (error) {
