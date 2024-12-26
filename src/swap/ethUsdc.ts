@@ -525,4 +525,3 @@ async function setupAmounts(
 //   }
 // }
 
-run()
