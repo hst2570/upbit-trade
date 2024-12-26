@@ -306,7 +306,7 @@ async function swap({
     const isTargetEth = myEthAmount > usdcAmount
     const targetAmount = isTargetEth
       ? ethers.parseUnits(
-          ((myEthAmount - half) / currentToken0Price).toString(),
+          ((myEthAmount - half) / currentToken0Price).toFixed(18).toString(),
           18
         )
       : ethers.parseUnits((usdcAmount - half).toFixed(6).toString(), 6)
