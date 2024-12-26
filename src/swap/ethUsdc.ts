@@ -1,7 +1,9 @@
 import { CurrencyAmount, Percent, Token } from '@uniswap/sdk-core'
 import { NonfungiblePositionManager, Pool, Position } from '@uniswap/v3-sdk'
-import { ethers, JsonRpcProvider, Wallet } from 'ethers'
+import { ContractRunner, ethers, JsonRpcProvider, Wallet } from 'ethers'
 import JSBI from 'jsbi'
+import ENV from '../../env'
+import { sendNotification } from '../notification'
 import {
   NONFUNGIBLE_POSITION_MANAGER_ABI,
   POOL_ABI,
@@ -15,8 +17,6 @@ import {
   USDC_ADDRESS,
   WETH_ADDRESS,
 } from './constants/contract'
-import ENV from '../../env'
-import { sendNotification } from '../notification'
 
 const { SWAP } = ENV
 const { PRIVATE_KEY, RPC, MIN, MAX } = SWAP
@@ -55,82 +55,121 @@ export const run = async () => {
       tokenId: string
       position: Position
     }
-    const { tickLower, tickUpper, liquidity } = currentPosition
-    const liquidityAmount = JSBI.BigInt(liquidity.toString())
+    const isPositionEmpty = tokenId ? false : true
 
     const slot = await currentTick(poolContract as any)
     const { tick: tickBig, sqrtPriceX96 } = slot
     const currentSqrtPriceX96 = sqrtPriceX96.toString()
     const tick = Number(tickBig)
-
     const currentToken0Price = Math.pow(1.0001, tick) * 1e12
-
     const newTickLower = Math.floor(
       Math.log((currentToken0Price / 1e12) * MIN) / Math.log(1.0001)
     )
-
     const newTickUpper = Math.floor(
       Math.log((currentToken0Price / 1e12) * MAX) / Math.log(1.0001)
     )
 
-    const pool = new Pool(
-      token0,
-      token1,
-      500,
-      currentSqrtPriceX96,
-      liquidityAmount,
-      tick
-    )
-
-    const position = new Position({
-      pool,
-      tickLower: Number(tickLower),
-      tickUpper: Number(tickUpper),
-      liquidity: liquidityAmount,
-    })
-
-    const isLower = tick < tickLower
-    const isUpper = tick > tickUpper
-    const isOutOfRange = isLower || isUpper
-
-    if (!isOutOfRange) {
-      // sendNotification(`[현재 틱 범위 내...] ETH/USDC`)
+    if (isPositionEmpty) {
+      await createPosition({
+        wallet,
+        provider,
+        walletAddress,
+        positionManager,
+        newTickLower,
+        newTickUpper,
+        currentToken0Price,
+      })
       return
     } else {
-      await closePosition({
-        tokenId,
-        position,
-        positionManager,
-        walletAddress,
-        wallet,
-      })
+      const { tickLower, tickUpper, liquidity } = currentPosition || {}
+      const liquidityAmount = JSBI.BigInt(liquidity.toString())
+      const isLower = tick < tickLower
+      const isUpper = tick > tickUpper
+      const isOutOfRange = isLower || isUpper
 
-      await swap({
-        isUpper,
-        wallet,
-        provider,
-        walletAddress,
-      })
+      if (!isOutOfRange) {
+        // sendNotification(`[현재 틱 범위 내...] ETH/USDC`)
+        return
+      } else {
+        const pool = new Pool(
+          token0,
+          token1,
+          500,
+          currentSqrtPriceX96,
+          liquidityAmount,
+          tick
+        )
 
-      const { amount0, amount1 } = await setupAmounts(
-        provider,
-        WETH_ADDRESS,
-        USDC_ADDRESS,
-        walletAddress
-      )
+        const position = new Position({
+          pool,
+          tickLower: Number(tickLower),
+          tickUpper: Number(tickUpper),
+          liquidity: liquidityAmount,
+        })
 
-      await createArbitrumPosition({
-        amount0,
-        amount1,
-        tickLower: newTickLower,
-        tickUpper: newTickUpper,
-        positionManager,
-        walletAddress,
-      })
+        await closePosition({
+          tokenId,
+          position,
+          positionManager,
+          walletAddress,
+          wallet,
+        })
+
+        await createPosition({
+          wallet,
+          provider,
+          walletAddress,
+          positionManager,
+          newTickLower,
+          newTickUpper,
+          currentToken0Price,
+        })
+      }
     }
   } catch (error) {
     sendNotification(`[!실패...] ETH/USDC`)
   }
+}
+
+const createPosition = async ({
+  wallet,
+  provider,
+  walletAddress,
+  positionManager,
+  newTickLower,
+  newTickUpper,
+  currentToken0Price,
+}: {
+  wallet: Wallet
+  provider: JsonRpcProvider
+  walletAddress: string
+  positionManager: ethers.Contract
+  newTickLower: number
+  newTickUpper: number
+  currentToken0Price: number
+}) => {
+  await swap({
+    wallet,
+    provider,
+    walletAddress,
+    currentToken0Price,
+  })
+
+  const { amount0, amount1 } = await setupAmounts(
+    provider,
+    WETH_ADDRESS,
+    USDC_ADDRESS,
+    walletAddress
+  )
+
+  await createNewPosition({
+    amount0,
+    amount1,
+    tickLower: newTickLower,
+    tickUpper: newTickUpper,
+    positionManager,
+    walletAddress,
+  })
 }
 
 const currentTick = async (poolContract: { slot0: () => any }) => {
@@ -154,7 +193,7 @@ const getPools = async ({
     const balance = await positionManager.balanceOf(walletAddress)
 
     // 사용자가 소유한 각 Token ID 및 관련 정보 가져오기
-    for (let i = 0; i < balance; i++) {
+    for (let i = balance - 1n; i >= 0; i--) {
       const tokenId = await positionManager.tokenOfOwnerByIndex(
         walletAddress,
         i
@@ -166,6 +205,8 @@ const getPools = async ({
         return { position, tokenId }
       }
     }
+
+    return {}
   } catch (error) {
     sendNotification(`[!포지션 조회 실패...] ETH/USDC`)
   }
@@ -235,38 +276,57 @@ async function closePosition({
     })
     await tx.wait()
   } catch (error) {
-    sendNotification(`[!포지션 종료 실패...] ETH/USDC`)
-    throw new Error()
+    throw new Error(`[!포지션 종료 실패...] ETH/USDC`)
   }
 }
 
 async function swap({
-  isUpper = false,
   wallet,
   provider,
   walletAddress,
+  currentToken0Price,
 }: {
-  isUpper: boolean
   wallet: Wallet
   provider: JsonRpcProvider
   walletAddress: string
+  currentToken0Price: number
 }) {
   try {
+    const { amount0: weth, amount1: usdc } = await setupAmounts(
+      provider,
+      WETH_ADDRESS,
+      USDC_ADDRESS,
+      walletAddress
+    )
+
+    const ethAmount = Number(weth) / 1e18
+    const myEthAmount = ethAmount * currentToken0Price
+    const usdcAmount = Number(usdc) / 1e6
+    const half = Number(myEthAmount + usdcAmount) / 2
+    const isTargetEth = myEthAmount > usdcAmount
+    const targetAmount = isTargetEth
+      ? ethers.parseUnits(
+          ((myEthAmount - half) / currentToken0Price).toString(),
+          18
+        )
+      : ethers.parseUnits((usdcAmount - half).toFixed(6).toString(), 6)
+    const elseAmount = !isTargetEth
+      ? ethers.parseUnits(
+          (((half - myEthAmount) / currentToken0Price) * 0.95)
+            .toFixed(18)
+            .toString(),
+          18
+        )
+      : ethers.parseUnits(((half - usdcAmount) * 0.95).toFixed(6).toString(), 6)
+
+    const targetCotractAddress = isTargetEth ? WETH_ADDRESS : USDC_ADDRESS
+    const elseContractAddress = isTargetEth ? USDC_ADDRESS : WETH_ADDRESS
+
     const swapRouter = new ethers.Contract(
       SWAP_ROUTER_ADDRESS,
       SWAP_ROUTER_ABI,
       wallet
     )
-    const targetCotractAddress = isUpper ? USDC_ADDRESS : WETH_ADDRESS
-    const elseContractAddress = isUpper ? WETH_ADDRESS : USDC_ADDRESS
-
-    const wethContract = new ethers.Contract(
-      targetCotractAddress,
-      ['function balanceOf(address owner) view returns (uint256)'],
-      provider
-    )
-    const balance = await wethContract.balanceOf(walletAddress)
-    const halfAmount = balance / 2n
 
     const approveAbi = [
       'function approve(address spender, uint256 amount) returns (bool)',
@@ -276,14 +336,13 @@ async function swap({
       approveAbi,
       wallet
     )
-    const approveTx = await targetToken.approve(SWAP_ROUTER_ADDRESS, halfAmount)
+    const approveTx = await targetToken.approve(
+      SWAP_ROUTER_ADDRESS,
+      targetAmount
+    )
     await approveTx.wait()
 
     const deadline = Math.floor(Date.now() / 1000) + 60 * 10 // 10분 내 실행 제한
-    const amountOutMinimum = ethers.parseUnits(
-      isUpper ? '1' : '0.0001',
-      isUpper ? 6 : 18
-    ) // 최소 슬리피지 방지
 
     const params = {
       tokenIn: targetCotractAddress,
@@ -291,19 +350,21 @@ async function swap({
       fee: 500, // 수수료 티어 0.05%
       recipient: walletAddress,
       deadline,
-      amountIn: halfAmount,
-      amountOutMinimum,
+      amountIn: targetAmount,
+      amountOutMinimum: elseAmount,
       sqrtPriceLimitX96: 0, // 가격 제한 없음
     }
 
-    const swapTx = await swapRouter.exactInputSingle(params, { value: 0 })
+    const swapTx = await swapRouter.exactInputSingle(params, {
+      value: 0,
+    })
     await swapTx.wait()
   } catch (error) {
-    sendNotification(`[!스왑 실패...] ETH/USDC`)
+    throw new Error(`[!스왑 실패...] ETH/USDC`)
   }
 }
 
-async function createArbitrumPosition({
+async function createNewPosition({
   amount0,
   amount1,
   tickLower,
@@ -336,17 +397,17 @@ async function createArbitrumPosition({
       deadline,
     }
 
-    const tx = await positionManager.mint(params)
+    await positionManager.mint(params)
     sendNotification(`[새로운 포지션 생성 완료] ETH/USDC`)
   } catch (error) {
-    sendNotification(`[!새로운 포지션 생성 실패...] ETH/USDC`)
+    throw new Error(`[!새로운 포지션 생성 실패...] ETH/USDC`)
   }
 }
 
 async function getERC20Balance(
   tokenAddress: string,
   walletAddress: string,
-  provider: JsonRpcProvider
+  provider: ContractRunner
 ): Promise<bigint> {
   const abi = ['function balanceOf(address account) view returns (uint256)']
   const contract = new ethers.Contract(tokenAddress, abi, provider)
@@ -355,7 +416,7 @@ async function getERC20Balance(
 }
 
 async function setupAmounts(
-  provider: JsonRpcProvider,
+  provider: ContractRunner,
   token0Address: string,
   token1Address: string,
   walletAddress: string
@@ -374,3 +435,94 @@ async function setupAmounts(
 
   return { amount0, amount1 }
 }
+
+// const swapUsingUniversalRouter = async ({
+//   walletAddress,
+//   provider,
+//   currentToken0Price,
+// }: {
+//   walletAddress: string
+//   provider: ContractRunner
+//   currentToken0Price: number
+// }) => {
+//   try {
+//     // const commands = '0x000604'
+//     const commands = '0x000604'
+
+//     const { amount0: weth, amount1: usdc } = await setupAmounts(
+//       provider,
+//       WETH_ADDRESS,
+//       USDC_ADDRESS,
+//       walletAddress
+//     )
+
+//     const ethAmount = Number(weth) / 1e18
+//     const usdcAmount = Number(usdc) / 1e6
+//     const half = Number(ethAmount * currentToken0Price + usdcAmount) / 2
+//     const amountEth = ethers.parseUnits(
+//       Number(half / currentToken0Price).toString(),
+//       18
+//     )
+//     const amountUSDC = ethers.parseUnits(half.toFixed(6).toString(), 6)
+
+//     const targetCotractAddress =
+//       ethAmount > usdcAmount ? WETH_ADDRESS : USDC_ADDRESS
+//     const amountIn = ethAmount > usdcAmount ? amountEth : amountUSDC
+//     const elseContractAddress =
+//       ethAmount > usdcAmount ? USDC_ADDRESS : WETH_ADDRESS
+//     const amountOutMin = ethAmount > usdcAmount ? amountUSDC : amountEth
+
+//     const path = ethers.solidityPacked(
+//       ['address', 'uint24', 'address'],
+//       [targetCotractAddress, 500, elseContractAddress]
+//     )
+
+//     const payPortionRecipient = walletAddress // 지불받을 주소
+//     const payPortionValue = amountIn
+//     const percentageInBasisPoints = amountIn
+
+//     const sweepRecipient = walletAddress // 잔여 토큰 받을 주소
+//     const sweepToken = elseContractAddress // 잔여 토큰 주소 (USDC)
+//     const abiCoder = new AbiCoder()
+
+//     const inputs = [
+//       // V3_SWAP_EXACT_IN
+//       abiCoder.encode(
+//         ['address', 'uint256', 'uint256', 'bytes', 'bool'],
+//         [walletAddress, amountIn, amountOutMin / 2n, path, true]
+//       ),
+//       // PAY_PORTION
+//       abiCoder.encode(
+//         ['address', 'address', 'uint256'],
+//         [targetCotractAddress, walletAddress, 5000]
+//       ),
+//       // SWEEP
+//       abiCoder.encode(
+//         ['address', 'address', 'uint256'],
+//         [walletAddress, sweepToken, ethers.getUint(0n)]
+//       ),
+//     ]
+
+//     const universalRouterContract = new ethers.Contract(
+//       UNIVERSAL_ROUTER_ADDRESS,
+//       UNIVERSAL_ROUTER_ABI,
+//       provider
+//     )
+
+//     const deadline = Math.floor(Date.now() / 1000) + 60 * 10 // 10분 내 실행 제한
+
+//     const tx = await universalRouterContract.execute.staticCall(
+//       commands,
+//       inputs,
+//       deadline
+//     )
+
+//     const result = await tx.wait()
+//     console.log(result)
+//   } catch (error) {
+//     console.error(error)
+//     throw new Error(`[!유니버셜 라우터 스왑 실패...] ETH/USDC`)
+//   }
+// }
+
+run()
