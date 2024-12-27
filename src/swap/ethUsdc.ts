@@ -60,11 +60,14 @@ export const run = async () => {
     const slot = await currentTick(poolContract as any)
     const { tick: tickBig, sqrtPriceX96 } = slot
     const currentSqrtPriceX96 = sqrtPriceX96.toString()
+
     const tick = Number(tickBig)
     const currentToken0Price = Math.pow(1.0001, tick) * 1e12
+
     const newTickLower = Math.floor(
       Math.log((currentToken0Price / 1e12) * MIN) / Math.log(1.0001)
     )
+
     const newTickUpper = Math.floor(
       Math.log((currentToken0Price / 1e12) * MAX) / Math.log(1.0001)
     )
@@ -126,8 +129,9 @@ export const run = async () => {
         })
       }
     }
-  } catch (error) {
-    sendNotification(`[!실패...] ETH/USDC`)
+  } catch (error: unknown) {
+    const message = (error as Error)?.message || ''
+    sendNotification(`[!실패...] ETH/USDC \n\n ${message}`)
   }
 }
 
@@ -177,7 +181,7 @@ const currentTick = async (poolContract: { slot0: () => any }) => {
     const slot0 = await poolContract.slot0()
     return slot0
   } catch (error) {
-    sendNotification(`[!현재 틱 조회 실패...] ETH/USDC`)
+    throw new Error(`[!현재 틱 조회 실패...] ETH/USDC`)
   }
 }
 
@@ -208,7 +212,7 @@ const getPools = async ({
 
     return {}
   } catch (error) {
-    sendNotification(`[!포지션 조회 실패...] ETH/USDC`)
+    throw new Error(`[!포지션 조회 실패...] ETH/USDC`)
   }
 }
 
@@ -388,7 +392,7 @@ async function createNewPosition({
       token1: token1.address,
       fee: 500,
       tickLower: Math.floor(tickLower / 10) * 10,
-      tickUpper: Math.floor(tickUpper / 10) * 10,
+      tickUpper: Math.ceil(tickUpper / 10) * 10,
       amount0Desired: amount0,
       amount1Desired: amount1,
       amount0Min: BigInt(0),
@@ -524,4 +528,3 @@ async function setupAmounts(
 //     throw new Error(`[!유니버셜 라우터 스왑 실패...] ETH/USDC`)
 //   }
 // }
-

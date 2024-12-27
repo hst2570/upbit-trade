@@ -38,8 +38,8 @@ cron.schedule('*/1 * * * * *', async () => {
   }
 })
 
-/** 5분마다 실행, uniswap */
-cron.schedule('*/5 * * * *', () => {
+/** 2분마다 실행, uniswap */
+cron.schedule('*/2 * * * *', () => {
   run()
 })
 
@@ -52,16 +52,16 @@ cron.schedule('0 9 * * 1', () => {
       const myAccount: Balance[] = await getMyAccount()
 
       const allBalance = myAccount.reduce((acc, cur) => {
-        const { currency, balance, avg_buy_price } = cur
+        const { currency, balance } = cur
 
         if (currency === 'KRW') {
           return acc + balance
         } else {
-          return acc + balance * avg_buy_price
+          return acc
         }
       }, 0)
 
-      sendNotification('[총 잔고] ' + allBalance.toLocaleString() + '원')
+      sendNotification('[총 잔고] ' + allBalance?.toLocaleString() + '원')
     }
 
     sendMyBalance()
