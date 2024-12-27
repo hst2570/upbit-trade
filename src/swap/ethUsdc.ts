@@ -316,12 +316,12 @@ async function swap({
       : ethers.parseUnits((usdcAmount - half).toFixed(6).toString(), 6)
     const elseAmount = !isTargetEth
       ? ethers.parseUnits(
-          (((half - myEthAmount) / currentToken0Price) * 0.95)
+          (((half - myEthAmount) / currentToken0Price) * 0.99)
             .toFixed(18)
             .toString(),
           18
         )
-      : ethers.parseUnits(((half - usdcAmount) * 0.95).toFixed(6).toString(), 6)
+      : ethers.parseUnits(((half - usdcAmount) * 0.99).toFixed(6).toString(), 6)
 
     const targetCotractAddress = isTargetEth ? WETH_ADDRESS : USDC_ADDRESS
     const elseContractAddress = isTargetEth ? USDC_ADDRESS : WETH_ADDRESS
@@ -364,7 +364,8 @@ async function swap({
     })
     await swapTx.wait()
   } catch (error) {
-    throw new Error(`[!스왑 실패...] ETH/USDC`)
+    const message = (error as Error)?.message || ''
+    throw new Error(`[!스왑 실패...] ETH/USDC \n\n ${message}`)
   }
 }
 
