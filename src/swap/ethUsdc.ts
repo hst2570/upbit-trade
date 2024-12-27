@@ -391,7 +391,7 @@ async function createNewPosition({
       token0: token0.address,
       token1: token1.address,
       fee: 500,
-      tickLower: Math.floor(tickLower / 10) * 10,
+      tickLower: Math.ceil(tickLower / 10) * 10,
       tickUpper: Math.ceil(tickUpper / 10) * 10,
       amount0Desired: amount0,
       amount1Desired: amount1,
