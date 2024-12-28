@@ -20,7 +20,8 @@ const time = `${now.getFullYear()}-${now.getMonth() + 1}-${
 }T${now.getHours()}:00:00`
 
 const startDate = '2017-09-26'
-const market = 'KRW-BTC'
+// const market = 'KRW-BTC'
+const market = 'KRW-ETH'
 // const startDate = '2021-10-15'
 // const market = 'KRW-SOL'
 // const startDate = '2020-08-05'

@@ -1,6 +1,6 @@
 import { CurrencyAmount, Percent, Token } from '@uniswap/sdk-core'
 import { NonfungiblePositionManager, Pool, Position } from '@uniswap/v3-sdk'
-import { ContractRunner, ethers, JsonRpcProvider, Wallet } from 'ethers'
+import { ContractRunner, ethers, JsonRpcProvider, Wallet } from 'ethersV6'
 import JSBI from 'jsbi'
 import ENV from '../../env'
 import { sendNotification } from '../notification'
@@ -17,6 +17,7 @@ import {
   USDC_ADDRESS,
   WETH_ADDRESS,
 } from './constants/contract'
+import { executeRoute } from './routing'
 
 const { SWAP } = ENV
 const { PRIVATE_KEY, RPC, MIN, MAX } = SWAP
@@ -130,6 +131,7 @@ export const run = async () => {
       }
     }
   } catch (error: unknown) {
+    console.error(error)
     const message = (error as Error)?.message || ''
     sendNotification(`[!실패...] ETH/USDC \n\n ${message}`)
   }
@@ -152,8 +154,7 @@ const createPosition = async ({
   newTickUpper: number
   currentToken0Price: number
 }) => {
-  await swap({
-    wallet,
+  await swapV2({
     provider,
     walletAddress,
     currentToken0Price,
@@ -238,7 +239,7 @@ async function closePosition({
     })
 
     const liquidityPercentage = new Percent('100', '100') // 유동성 100%
-    const slippageTolerance = new Percent('5', '100') // 슬리피지 5%
+    const slippageTolerance = new Percent(50, 100_00) // 0.5%
     const expectedCurrencyOwed0 = CurrencyAmount.fromRawAmount(
       token0,
       fee0.toString()
@@ -284,6 +285,7 @@ async function closePosition({
   }
 }
 
+/** @deprecated */
 async function swap({
   wallet,
   provider,
@@ -441,91 +443,45 @@ async function setupAmounts(
   return { amount0, amount1 }
 }
 
-// const swapUsingUniversalRouter = async ({
-//   walletAddress,
-//   provider,
-//   currentToken0Price,
-// }: {
-//   walletAddress: string
-//   provider: ContractRunner
-//   currentToken0Price: number
-// }) => {
-//   try {
-//     // const commands = '0x000604'
-//     const commands = '0x000604'
+async function swapV2({
+  provider,
+  walletAddress,
+  currentToken0Price,
+}: {
+  provider: JsonRpcProvider
+  walletAddress: string
+  currentToken0Price: number
+}) {
+  try {
+    const { amount0: weth, amount1: usdc } = await setupAmounts(
+      provider,
+      WETH_ADDRESS,
+      USDC_ADDRESS,
+      walletAddress
+    )
 
-//     const { amount0: weth, amount1: usdc } = await setupAmounts(
-//       provider,
-//       WETH_ADDRESS,
-//       USDC_ADDRESS,
-//       walletAddress
-//     )
+    const ethAmount = Number(weth) / 1e18
+    const myEthAmount = ethAmount * currentToken0Price
+    const usdcAmount = Number(usdc) / 1e6
+    const isTargetEth = myEthAmount > usdcAmount
+    const half = Number(myEthAmount + usdcAmount) / 2
 
-//     const ethAmount = Number(weth) / 1e18
-//     const usdcAmount = Number(usdc) / 1e6
-//     const half = Number(ethAmount * currentToken0Price + usdcAmount) / 2
-//     const amountEth = ethers.parseUnits(
-//       Number(half / currentToken0Price).toString(),
-//       18
-//     )
-//     const amountUSDC = ethers.parseUnits(half.toFixed(6).toString(), 6)
+    const amountIn = isTargetEth
+      ? ((myEthAmount - half) / currentToken0Price).toFixed(18)
+      : (usdcAmount - half).toFixed(6)
+    const decimals = isTargetEth ? 18 : 6
 
-//     const targetCotractAddress =
-//       ethAmount > usdcAmount ? WETH_ADDRESS : USDC_ADDRESS
-//     const amountIn = ethAmount > usdcAmount ? amountEth : amountUSDC
-//     const elseContractAddress =
-//       ethAmount > usdcAmount ? USDC_ADDRESS : WETH_ADDRESS
-//     const amountOutMin = ethAmount > usdcAmount ? amountUSDC : amountEth
+    await executeRoute({
+      walletAddress,
+      targetToken: isTargetEth ? token0 : token1,
+      elseToken: isTargetEth ? token1 : token0,
+      amountIn: Number(amountIn),
+      decimals,
+    })
+  } catch (error) {
+    const message = (error as Error)?.message || ''
+    throw new Error(`[!스왑 실패...] ETH/USDC \n\n ${message}`)
+  }
+}
 
-//     const path = ethers.solidityPacked(
-//       ['address', 'uint24', 'address'],
-//       [targetCotractAddress, 500, elseContractAddress]
-//     )
-
-//     const payPortionRecipient = walletAddress // 지불받을 주소
-//     const payPortionValue = amountIn
-//     const percentageInBasisPoints = amountIn
-
-//     const sweepRecipient = walletAddress // 잔여 토큰 받을 주소
-//     const sweepToken = elseContractAddress // 잔여 토큰 주소 (USDC)
-//     const abiCoder = new AbiCoder()
-
-//     const inputs = [
-//       // V3_SWAP_EXACT_IN
-//       abiCoder.encode(
-//         ['address', 'uint256', 'uint256', 'bytes', 'bool'],
-//         [walletAddress, amountIn, amountOutMin / 2n, path, true]
-//       ),
-//       // PAY_PORTION
-//       abiCoder.encode(
-//         ['address', 'address', 'uint256'],
-//         [targetCotractAddress, walletAddress, 5000]
-//       ),
-//       // SWEEP
-//       abiCoder.encode(
-//         ['address', 'address', 'uint256'],
-//         [walletAddress, sweepToken, ethers.getUint(0n)]
-//       ),
-//     ]
-
-//     const universalRouterContract = new ethers.Contract(
-//       UNIVERSAL_ROUTER_ADDRESS,
-//       UNIVERSAL_ROUTER_ABI,
-//       provider
-//     )
-
-//     const deadline = Math.floor(Date.now() / 1000) + 60 * 10 // 10분 내 실행 제한
-
-//     const tx = await universalRouterContract.execute.staticCall(
-//       commands,
-//       inputs,
-//       deadline
-//     )
-
-//     const result = await tx.wait()
-//     console.log(result)
-//   } catch (error) {
-//     console.error(error)
-//     throw new Error(`[!유니버셜 라우터 스왑 실패...] ETH/USDC`)
-//   }
-// }
+run()
