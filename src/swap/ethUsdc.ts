@@ -285,92 +285,6 @@ async function closePosition({
   }
 }
 
-/** @deprecated */
-async function swap({
-  wallet,
-  provider,
-  walletAddress,
-  currentToken0Price,
-}: {
-  wallet: Wallet
-  provider: JsonRpcProvider
-  walletAddress: string
-  currentToken0Price: number
-}) {
-  try {
-    const { amount0: weth, amount1: usdc } = await setupAmounts(
-      provider,
-      WETH_ADDRESS,
-      USDC_ADDRESS,
-      walletAddress
-    )
-
-    const ethAmount = Number(weth) / 1e18
-    const myEthAmount = ethAmount * currentToken0Price
-    const usdcAmount = Number(usdc) / 1e6
-    const half = Number(myEthAmount + usdcAmount) / 2
-    const isTargetEth = myEthAmount > usdcAmount
-    const targetAmount = isTargetEth
-      ? ethers.parseUnits(
-          ((myEthAmount - half) / currentToken0Price).toFixed(18).toString(),
-          18
-        )
-      : ethers.parseUnits((usdcAmount - half).toFixed(6).toString(), 6)
-    const elseAmount = !isTargetEth
-      ? ethers.parseUnits(
-          (((half - myEthAmount) / currentToken0Price) * 0.99)
-            .toFixed(18)
-            .toString(),
-          18
-        )
-      : ethers.parseUnits(((half - usdcAmount) * 0.99).toFixed(6).toString(), 6)
-
-    const targetCotractAddress = isTargetEth ? WETH_ADDRESS : USDC_ADDRESS
-    const elseContractAddress = isTargetEth ? USDC_ADDRESS : WETH_ADDRESS
-
-    const swapRouter = new ethers.Contract(
-      SWAP_ROUTER_ADDRESS,
-      SWAP_ROUTER_ABI,
-      wallet
-    )
-
-    const approveAbi = [
-      'function approve(address spender, uint256 amount) returns (bool)',
-    ]
-    const targetToken = new ethers.Contract(
-      targetCotractAddress,
-      approveAbi,
-      wallet
-    )
-    const approveTx = await targetToken.approve(
-      SWAP_ROUTER_ADDRESS,
-      targetAmount
-    )
-    await approveTx.wait()
-
-    const deadline = Math.floor(Date.now() / 1000) + 60 * 10 // 10분 내 실행 제한
-
-    const params = {
-      tokenIn: targetCotractAddress,
-      tokenOut: elseContractAddress,
-      fee: 500, // 수수료 티어 0.05%
-      recipient: walletAddress,
-      deadline,
-      amountIn: targetAmount,
-      amountOutMinimum: elseAmount,
-      sqrtPriceLimitX96: 0, // 가격 제한 없음
-    }
-
-    const swapTx = await swapRouter.exactInputSingle(params, {
-      value: 0,
-    })
-    await swapTx.wait()
-  } catch (error) {
-    const message = (error as Error)?.message || ''
-    throw new Error(`[!스왑 실패...] ETH/USDC \n\n ${message}`)
-  }
-}
-
 async function createNewPosition({
   amount0,
   amount1,
@@ -483,5 +397,3 @@ async function swapV2({
     throw new Error(`[!스왑 실패...] ETH/USDC \n\n ${message}`)
   }
 }
-
-run()

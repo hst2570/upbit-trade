@@ -1,16 +1,20 @@
 import { CurrencyAmount, Percent, Token, TradeType } from '@uniswap/sdk-core'
 import {
   AlphaRouter,
+  AlphaRouterConfig,
   SwapOptionsSwapRouter02,
+  SwapOptionsUniversalRouter,
   SwapRoute,
   SwapType,
 } from '@uniswap/smart-order-router'
 
 import { BaseProvider } from '@ethersproject/providers'
-import { ethers, Wallet } from 'ethers'
+import { BigNumber, ethers, Wallet } from 'ethers'
 import JSBI from 'jsbi'
 import ENV from '../../env'
 import { ARBITRUM_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS } from './constants/contract'
+import { DEFAULT_ROUTING_CONFIG_BY_CHAIN } from './constants/config'
+import { UniversalRouterVersion } from '@uniswap/universal-router-sdk'
 
 const ERC20_ABI = [
   // Read-Only Functions
@@ -31,6 +35,23 @@ const { PRIVATE_KEY, RPC } = SWAP
 
 const privateKey = PRIVATE_KEY || ''
 const rpcUrl = RPC
+const Protocol = {
+  V2: 'V2',
+  V3: 'V3',
+  V4: 'V4',
+  MIXED: 'MIXED',
+}
+
+const ROUTING_CONFIG: AlphaRouterConfig = {
+  // @ts-ignore[TS7053] - complaining about switch being non exhaustive
+  ...DEFAULT_ROUTING_CONFIG_BY_CHAIN[ARBITRUM_CHAIN_ID],
+  // protocols: [Protocol.V3, Protocol.V2],
+  // saveTenderlySimulationIfFailed: true, // save tenderly simulation on integ-test runs, easier for debugging
+}
+
+function parseDeadline(deadlineOrPreviousBlockhash: number): number {
+  return Math.floor(Date.now() / 1000) + deadlineOrPreviousBlockhash
+}
 
 async function generateRoute({
   wallet,
@@ -52,11 +73,23 @@ async function generateRoute({
     provider: wallet.provider as BaseProvider,
   })
 
-  const options: SwapOptionsSwapRouter02 = {
+  // const options: SwapOptionsSwapRouter02 = {
+  //   recipient: walletAddress,
+  //   slippageTolerance: new Percent(50, 10_000),
+  //   type: SwapType.SWAP_ROUTER_02,
+  //   deadline: Math.floor(Date.now() / 1000) + 60 * 20,
+  // }
+
+  const options: SwapOptionsUniversalRouter = {
+    type: SwapType.UNIVERSAL_ROUTER,
+    version: UniversalRouterVersion.V2_0,
     recipient: walletAddress,
     slippageTolerance: new Percent(50, 10_000),
-    type: SwapType.SWAP_ROUTER_02,
-    deadline: Math.floor(Date.now() / 1000) + 60 * 20,
+    deadlineOrPreviousBlockhash: parseDeadline(360),
+    fee: {
+      recipient: targetToken.address,
+      fee: new Percent(12, 10000),
+    },
   }
 
   const amount = CurrencyAmount.fromRawAmount(
@@ -68,7 +101,10 @@ async function generateRoute({
     amount,
     elseToken,
     TradeType.EXACT_INPUT,
-    options
+    options,
+    {
+      ...ROUTING_CONFIG,
+    }
   )
 
   return route
@@ -108,14 +144,21 @@ export async function executeRoute({
 }) {
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl)
   const wallet = new Wallet(privateKey, provider)
-  const route = await generateRoute({
+  const { methodParameters } = (await generateRoute({
     wallet,
     walletAddress,
     targetToken,
     elseToken,
     amountIn,
     decimals,
-  })
+  })) || {
+    methodParameters: {
+      to: '',
+      calldata: '',
+      value: 0,
+    },
+  }
+  const { to, calldata, value } = methodParameters!
 
   await getTokenTransferApproval({
     token: targetToken,
@@ -127,10 +170,28 @@ export async function executeRoute({
   const MAX_FEE_PER_GAS = 100000000
   const MAX_PRIORITY_FEE_PER_GAS = 100000000
 
+  // const params = {
+  //   data: route?.methodParameters?.calldata,
+  //   to: V3_SWAP_ROUTER_ADDRESS,
+  //   value: route?.methodParameters?.value,
+  //   from: walletAddress,
+  //   maxFeePerGas: MAX_FEE_PER_GAS,
+  //   maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
+  // }
+
+  // const transaction = {
+  //   data: methodParameters.calldata,
+  //   to: methodParameters.to,
+  //   value: BigNumber.from(methodParameters.value),
+  //   from: alice._address,
+  //   gasPrice: BigNumber.from(2000000000000),
+  //   type: 1,
+  // };
+
   const params = {
-    data: route?.methodParameters?.calldata,
-    to: V3_SWAP_ROUTER_ADDRESS,
-    value: route?.methodParameters?.value,
+    to,
+    data: calldata,
+    value: BigNumber.from(value),
     from: walletAddress,
     maxFeePerGas: MAX_FEE_PER_GAS,
     maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
