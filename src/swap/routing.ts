@@ -1,20 +1,18 @@
+import { BaseProvider } from '@ethersproject/providers'
 import { CurrencyAmount, Percent, Token, TradeType } from '@uniswap/sdk-core'
 import {
   AlphaRouter,
   AlphaRouterConfig,
-  SwapOptionsSwapRouter02,
   SwapOptionsUniversalRouter,
   SwapRoute,
   SwapType,
 } from '@uniswap/smart-order-router'
-
-import { BaseProvider } from '@ethersproject/providers'
+import { UniversalRouterVersion } from '@uniswap/universal-router-sdk'
 import { BigNumber, ethers, Wallet } from 'ethers'
 import JSBI from 'jsbi'
 import ENV from '../../env'
-import { ARBITRUM_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS } from './constants/contract'
 import { DEFAULT_ROUTING_CONFIG_BY_CHAIN } from './constants/config'
-import { UniversalRouterVersion } from '@uniswap/universal-router-sdk'
+import { ARBITRUM_CHAIN_ID, V3_SWAP_ROUTER_ADDRESS } from './constants/contract'
 
 const ERC20_ABI = [
   // Read-Only Functions
@@ -35,12 +33,6 @@ const { PRIVATE_KEY, RPC } = SWAP
 
 const privateKey = PRIVATE_KEY || ''
 const rpcUrl = RPC
-const Protocol = {
-  V2: 'V2',
-  V3: 'V3',
-  V4: 'V4',
-  MIXED: 'MIXED',
-}
 
 const ROUTING_CONFIG: AlphaRouterConfig = {
   // @ts-ignore[TS7053] - complaining about switch being non exhaustive
@@ -72,13 +64,6 @@ async function generateRoute({
     chainId: ARBITRUM_CHAIN_ID,
     provider: wallet.provider as BaseProvider,
   })
-
-  // const options: SwapOptionsSwapRouter02 = {
-  //   recipient: walletAddress,
-  //   slippageTolerance: new Percent(50, 10_000),
-  //   type: SwapType.SWAP_ROUTER_02,
-  //   deadline: Math.floor(Date.now() / 1000) + 60 * 20,
-  // }
 
   const options: SwapOptionsUniversalRouter = {
     type: SwapType.UNIVERSAL_ROUTER,
@@ -169,24 +154,6 @@ export async function executeRoute({
 
   const MAX_FEE_PER_GAS = 100000000
   const MAX_PRIORITY_FEE_PER_GAS = 100000000
-
-  // const params = {
-  //   data: route?.methodParameters?.calldata,
-  //   to: V3_SWAP_ROUTER_ADDRESS,
-  //   value: route?.methodParameters?.value,
-  //   from: walletAddress,
-  //   maxFeePerGas: MAX_FEE_PER_GAS,
-  //   maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS,
-  // }
-
-  // const transaction = {
-  //   data: methodParameters.calldata,
-  //   to: methodParameters.to,
-  //   value: BigNumber.from(methodParameters.value),
-  //   from: alice._address,
-  //   gasPrice: BigNumber.from(2000000000000),
-  //   type: 1,
-  // };
 
   const params = {
     to,
