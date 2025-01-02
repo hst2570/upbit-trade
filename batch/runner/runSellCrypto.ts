@@ -1,5 +1,7 @@
 import gambling from '../../src/strategy/gamblingWithList'
 
+const ONE_MINUTE = 60000
+
 const timer = fn => {
   let timeout = null as any
 
@@ -8,13 +10,11 @@ const timer = fn => {
       fn && fn()
       clearTimeout(timeout)
       resolve(true)
-    }, 600000)
+    }, ONE_MINUTE - 1000)
   })
 }
 
-const run = () => {
-  console.log('running a task every day at 9:00 AM')
-  let timeout = null as any
+const run = async () => {
   let interval = null as any
   let isRunning = false
 
@@ -34,10 +34,7 @@ const run = () => {
     sell()
   }, 1000)
 
-  timer(() => clearInterval(interval)).then(() => {
-    clearInterval(interval)
-    clearTimeout(timeout)
-  })
+  await timer(() => clearInterval(interval))
 }
 
 run()
