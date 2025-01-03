@@ -8,7 +8,7 @@ import { AAVE_LENDING_POOL_ADDRESS } from './constants/contract'
 const { SWAP } = ENV
 const { PRIVATE_KEY, RPC: PROVIDER_URL } = SWAP
 
-async function withdrawFromAave() {
+export async function withdrawFromAave() {
   try {
     // 1. 이더리움 공급자 및 월렛 생성
     const provider = new ethers.JsonRpcProvider(PROVIDER_URL)
@@ -21,16 +21,10 @@ async function withdrawFromAave() {
       wallet
     )
 
-    // 3. 해제할 USDC 금액 설정 (단위: 6자리 소수점)
-    const withdrawAmount = ethers.parseUnits('1000', 6) // 예: 1000 USDC
-    // 모든 예치금을 해제하려면 아래 줄 사용
-    // const withdrawAmount = ethers.constants.MaxUint256;
-
-    // 4. Aave에서 USDC 해제 (Withdraw)
     console.log('Withdrawing USDC from Aave...')
     const withdrawTx = await aaveLendingPool.withdraw(
       USDC_ADDRESS,
-      withdrawAmount,
+      ethers.MaxUint256,
       wallet.address
     )
     await withdrawTx.wait()
@@ -39,6 +33,3 @@ async function withdrawFromAave() {
     console.error('Error withdrawing from Aave:', error)
   }
 }
-
-// 실행
-withdrawFromAave()

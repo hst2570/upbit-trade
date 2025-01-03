@@ -4,8 +4,8 @@
 # sell-crypto: Runs every second
 * * * * * /home/ec2-user/.bun/bin/bun /home/ec2-user/app/upbit-trade/batch/runner/runSellCrypto.ts
 
-# swap: Runs every day at 10:00 PM
-0 22 * * * /home/ec2-user/.bun/bin/bun /home/ec2-user/app/upbit-trade/batch/runner/runSwap.ts
+# swap: Runs every day at 10:00 AM, 10 PM
+0 10,22 * * * /home/ec2-user/.bun/bin/bun /home/ec2-user/app/upbit-trade/batch/runner/runSwap.ts
 
 # health-check: Runs every day at 9:00 AM
 0 9 * * * /home/ec2-user/.bun/bin/bun /home/ec2-user/app/upbit-trade/batch/runner/runHealthCheck.ts

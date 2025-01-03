@@ -1,8 +1,11 @@
 import { CurrencyAmount, Percent, Token } from '@uniswap/sdk-core'
 import { NonfungiblePositionManager, Pool, Position } from '@uniswap/v3-sdk'
+import { sleep } from 'bun'
 import { ContractRunner, ethers, JsonRpcProvider, Wallet } from 'ethersV6'
 import JSBI from 'jsbi'
 import ENV from '../../env'
+import { depositToAave } from '../lending/deposit'
+import { withdrawFromAave } from '../lending/withdraw'
 import { sendNotification } from '../notification'
 import { NONFUNGIBLE_POSITION_MANAGER_ABI, POOL_ABI } from './constants/abi'
 import {
@@ -13,7 +16,6 @@ import {
   WETH_ADDRESS,
 } from './constants/contract'
 import { executeRoute } from './routing'
-import { sleep } from 'bun'
 
 const { SWAP } = ENV
 const { PRIVATE_KEY, RPC, MIN, MAX } = SWAP
@@ -76,7 +78,6 @@ export const run = async () => {
       const isOutOfRange = isLower || isUpper
 
       if (!isOutOfRange) {
-        // sendNotification(`[현재 틱 범위 내...] ETH/USDC`)
         return
       } else {
         const currentSqrtPriceX96 = sqrtPriceX96.toString()
@@ -130,7 +131,11 @@ const createPosition = async ({
   positionManager: ethers.Contract
   currentToken0Price: number
 }) => {
-  sleep(3000)
+  await sleep(3000)
+
+  await withdrawFromAave()
+
+  await sleep(3000)
 
   await swapV2({
     provider,
@@ -140,13 +145,17 @@ const createPosition = async ({
     token1,
   })
 
-  sleep(3000)
+  await sleep(3000)
 
   await createNewPosition({
     provider,
     positionManager,
     walletAddress,
   })
+
+  await sleep(3000)
+
+  await depositToAave()
 }
 
 const currentTick = async (poolContract: { slot0: () => any }) => {

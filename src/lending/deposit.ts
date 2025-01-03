@@ -3,12 +3,13 @@ import ENV from '../../env'
 import { USDC_ADDRESS } from '../swap/constants/contract'
 import { AAVE_LENDING_POOL_ABI, ERC20_ABI } from './constants/abi'
 import { AAVE_LENDING_POOL_ADDRESS } from './constants/contract'
+import { getERC20Balance } from '../swap/ethUsdc'
 
 // 사용자 환경 설정
 const { SWAP } = ENV
 const { PRIVATE_KEY, RPC: PROVIDER_URL } = SWAP
 
-async function depositToAave() {
+export async function depositToAave() {
   try {
     // 1. 이더리움 공급자 및 월렛 생성
     const provider = new ethers.JsonRpcProvider(PROVIDER_URL)
@@ -25,7 +26,11 @@ async function depositToAave() {
     )
 
     // 4. 예치할 USDC 금액 (단위: 6자리 소수점)
-    const depositAmount = ethers.parseUnits('1000', 6) // 예: 1000 USDC
+    const depositAmount = await getERC20Balance(
+      USDC_ADDRESS,
+      wallet.address,
+      wallet
+    )
 
     // 5. USDC 승인 (Approve)
     console.log('Approving USDC for Aave...')
@@ -50,6 +55,3 @@ async function depositToAave() {
     console.error('Error depositing to Aave:', error)
   }
 }
-
-// 실행
-depositToAave()
